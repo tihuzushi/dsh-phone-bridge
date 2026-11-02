@@ -1,0 +1,10 @@
+# Bundle patch for dsh-phone-bridge.
+#
+# A DSH "bundle" package ships a cordis patch; installing it adds the entry
+# below to the profile's plugin tree, which is what makes the plugin show up in
+# Settings -> Plugins and run inside the host process.
+#
+# `name` must match package.json's `name`. Rename both together if you fork.
+- insert:
+    - id: phone-bridge
+      name: dsh-phone-bridge
