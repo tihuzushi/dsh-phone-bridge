@@ -181,6 +181,14 @@ function runSettingsSection() {
       }
       data = payload
       failure = payload ? null : '没有找到正在运行的手机服务（8765 及之后的端口都没有响应）。'
+      // The host knows which client bundle it ships; reload once when we are stale.
+      try {
+        const mine = typeof BUILD !== 'undefined' ? BUILD : null
+        if (payload && payload.clientRev && mine && payload.clientRev !== mine && !sessionStorage.getItem('hp-phone-autoreload')) {
+          sessionStorage.setItem('hp-phone-autoreload', '1')
+          setTimeout(() => location.reload(), 300)
+        }
+      } catch (_) {}
     } catch (error) {
       data = null
       failure = '连不上手机服务（' + (error && error.message ? error.message : 'unknown') + '）。'
