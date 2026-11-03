@@ -172,15 +172,20 @@ function runSettingsSection() {
       // The bridge may move to another port when 8765 is taken, so probe the range.
       const candidates = BRIDGE ? [BRIDGE, ...PORT_CANDIDATES.map((p) => 'http://127.0.0.1:' + p)] : PORT_CANDIDATES.map((p) => 'http://127.0.0.1:' + p)
       let payload = null
+      let firstError = null
+      let tried = 0
       for (const base of candidates) {
+        tried += 1
         if (BRIDGE && base !== BRIDGE && payload) break
         try {
           payload = await readStatus(base)
           if (payload) { BRIDGE = base; break }
-        } catch (_) {}
+        } catch (error) {
+          if (!firstError) firstError = String((error && error.message) || error)
+        }
       }
       data = payload
-      failure = payload ? null : '没有找到正在运行的手机服务（8765 及之后的端口都没有响应）。'
+      failure = payload ? null : ('没有找到正在运行的手机服务（试了 ' + tried + ' 个端口）。首个错误：' + (firstError || '无') + '｜页面来源：' + location.origin)
       // The host knows which client bundle it ships; reload once when we are stale.
       try {
         const mine = typeof BUILD !== 'undefined' ? BUILD : null
