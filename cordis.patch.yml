@@ -7,4 +7,5 @@
 # `name` must match package.json's `name`. Rename both together if you fork.
 - insert:
     - id: phone-bridge
-      name: dsh-phone-bridge
+      name: 'dsh-phone-bridge'
+      config: {}
