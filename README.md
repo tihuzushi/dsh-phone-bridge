@@ -62,7 +62,8 @@ http://127.0.0.1:8765/_dsh-phone
 - 手机和电脑在同一个 tailnet 里，填这个 `100.x` 地址就能在外网用
 - 手机端**不需要装 Tailscale App**——HARNESS Phone 的 APK 内置了 tsnet，在 App 里登录一次即可
 
-局域网和 Tailscale 可以同时用，哪个通走哪个。
+> App 端自 2.x 起只支持内置 Tailscale，1.x 的「局域网直连 / 手动填 IP」已经移除。
+> 桥接本身仍监听 `0.0.0.0`，所以局域网里的浏览器还是能打开配对页。
 
 ## 配置
 

@@ -41,9 +41,6 @@
     '跟随系统': 'System',
     '连接设置': 'Connection settings',
     'Tailscale 账号': 'Tailscale account',
-    '连接方式': 'Connection method',
-    '内置 Tailscale': 'Built-in Tailscale',
-    '局域网直连': 'Direct LAN',
     '连接设备': 'Device',
     '当前连接': 'Current connection',
     '刷新': 'Refresh',
@@ -55,18 +52,14 @@
     '取消': 'Cancel',
     '连接': 'Connect',
     '配对码': 'Pairing code',
-    '手动输入 IP（备用）': 'Enter IP manually (fallback)',
-    '例如 100.64.0.1 或 192.168.1.10:8765': 'e.g. 100.64.0.1 or 192.168.1.10:8765',
     '6 位数字': '6-digit code',
     '登录后会自动从 Tailscale 账号读取设备。': 'Devices will be read from your Tailscale account after sign-in.',
-    '局域网直连模式，手动输入电脑 IP 或地址。': 'Direct LAN mode. Enter the computer IP or address manually.',
     '正在读取状态…': 'Reading status…',
     '正在检查连接…': 'Checking connection…',
     '尚未连接': 'Not connected',
     '需要登录 Tailscale': 'Tailscale sign-in required',
     'Tailscale 已连接': 'Tailscale connected',
     '已连接 Tailscale': 'Tailscale connected',
-    '局域网直连模式 · 不经过 Tailscale': 'Direct LAN mode · Tailscale bypassed',
     '下载的文件': 'Downloaded files',
     '用文件管理器打开下载文件夹': 'Open the Downloads folder in your file manager.',
     '字号大小': 'Font size',
@@ -951,20 +944,9 @@
         </div>
       </section>
       <section class="hp-conn-card">
-        <div class="hp-conn-card-title">连接方式</div>
-        <div class="hp-conn-mode">
-          <button type="button" data-hp-mode="tsnet">内置 Tailscale</button>
-          <button type="button" data-hp-mode="direct">局域网直连</button>
-        </div>
-        <div class="hp-conn-card-title" style="margin-top:14px">连接设备</div>
+        <div class="hp-conn-card-title">连接设备</div>
         <div class="hp-conn-hint" data-hp-conn-hint>登录后会自动从 Tailscale 账号读取设备。</div>
         <div class="hp-conn-devices" data-hp-conn-devices></div>
-        <label class="hp-check">
-          <input type="checkbox" data-hp-conn="manual">
-          <span>手动输入 IP（备用）</span>
-        </label>
-        <input class="hp-input" type="text" inputmode="url" autocomplete="off"
-               data-hp-conn="manualip" placeholder="例如 100.64.0.1 或 192.168.1.10:8765">
         <label class="hp-conn-label" for="hp-pair-code">配对码</label>
         <input id="hp-pair-code" class="hp-input hp-code" type="text" inputmode="numeric"
                maxlength="6" autocomplete="off" placeholder="6 位数字" data-hp-conn="code">
@@ -984,20 +966,7 @@
   let connectionTimer = null;
   let connectionStatus = {};
   let connectionConfig = { target: '', code: '' };
-  let connectionMode = 'tsnet';
   let previousActiveNav = null;
-
-  function setConnectionMode(mode) {
-    connectionMode = mode === 'direct' ? 'direct' : 'tsnet';
-    if (!connectionPanel) return;
-    connectionPanel.querySelectorAll('[data-hp-mode]').forEach((button) => {
-      button.classList.toggle('selected', button.getAttribute('data-hp-mode') === connectionMode);
-    });
-    if (connectionMode === 'direct') {
-      const manual = connectionPanel.querySelector('[data-hp-conn="manual"]');
-      if (manual) manual.checked = true;
-    }
-  }
 
   function nativeJson(method, fallback) {
     try {
@@ -1043,19 +1012,12 @@
     requestAnimationFrame(() => connectionPanel.classList.add('hp-open'));
     connectionConfig = { target: '', code: '' };
     try {
-      const raw = nativeJson('connectionConfig', nativeJson('tsnetConfig', '{}'));
-      const parsed = JSON.parse(raw || '{}');
+      const parsed = JSON.parse(nativeJson('connectionConfig', '{}') || '{}');
       connectionConfig.target = parsed.target || '';
       connectionConfig.code = parsed.code || '';
-      connectionMode = parsed.mode === 'direct' ? 'direct' : 'tsnet';
     } catch (_) {}
     const codeInput = connectionPanel.querySelector('[data-hp-conn="code"]');
     if (codeInput && connectionConfig.code) codeInput.value = connectionConfig.code;
-    const manualInput = connectionPanel.querySelector('[data-hp-conn="manualip"]');
-    if (manualInput && connectionConfig.target) manualInput.value = connectionConfig.target;
-    const manualCheck = connectionPanel.querySelector('[data-hp-conn="manual"]');
-    if (manualCheck && connectionMode === 'direct') manualCheck.checked = true;
-    setConnectionMode(connectionMode);
     refreshConnectionPanel();
     if (connectionTimer) clearInterval(connectionTimer);
     connectionTimer = setInterval(refreshConnectionPanel, 1500);
@@ -1083,11 +1045,6 @@
   }
 
   function handleConnectionClick(event) {
-    const modeButton = event.target.closest('[data-hp-mode]');
-    if (modeButton) {
-      setConnectionMode(modeButton.getAttribute('data-hp-mode'));
-      return;
-    }
     const action = event.target.closest('[data-hp-conn]');
     if (!action) return;
     const value = action.getAttribute('data-hp-conn');
@@ -1113,34 +1070,22 @@
       return;
     }
     if (value === 'connect') {
-      const manual = connectionPanel.querySelector('[data-hp-conn="manual"]').checked;
-      let target = '';
-      if (manual) {
-        target = connectionPanel.querySelector('[data-hp-conn="manualip"]').value.trim();
-      } else {
-        const selected = connectionPanel.querySelector('input[name="hp-device"]:checked');
-        target = selected ? selected.value : '';
-      }
+      const selected = connectionPanel.querySelector('input[name="hp-device"]:checked');
+      const target = selected ? selected.value : '';
       const code = connectionPanel.querySelector('[data-hp-conn="code"]').value.trim();
       if (!target) {
-        showToast('请选择设备或勾选手动输入 IP');
+        showToast('请选择要连接的设备');
         return;
       }
       if (!/^\d{6}$/.test(code)) {
         showToast('请输入 6 位配对码');
         return;
       }
-      if (connectionMode === 'direct') {
-        if (window.HarnessNative && window.HarnessNative.connectDirect) {
-          window.HarnessNative.connectDirect(target, code);
-        }
-        return;
-      }
       if (connectionStatus.state !== 'Running') {
         showToast('请先登录 Tailscale，等状态变为“已连接”');
         return;
       }
-      if (window.HarnessNative && window.HarnessNative.tsnetConnect) {
+      if (window.HarnessNative && typeof window.HarnessNative.tsnetConnect === 'function') {
         window.HarnessNative.tsnetConnect(target, code);
       }
     }
@@ -1163,13 +1108,6 @@
       else statusNode.textContent = (isEnglishUi() ? 'Tailscale status: ' : 'Tailscale 状态：') + state;
       statusNode.classList.toggle('hp-ok', state === 'Running');
     }
-    connectionPanel.querySelectorAll('[data-hp-mode]').forEach((button) => {
-      button.classList.toggle('selected', button.getAttribute('data-hp-mode') === connectionMode);
-    });
-    if (connectionMode === 'direct' && statusNode) {
-      statusNode.textContent = isEnglishUi() ? 'Direct LAN mode · Tailscale bypassed' : '局域网直连模式 · 不经过 Tailscale';
-      statusNode.classList.remove('hp-ok');
-    }
     const loginButton = connectionPanel.querySelector('[data-hp-conn="login"]');
     const logoutButton = connectionPanel.querySelector('[data-hp-conn="logout"]');
     if (loginButton) loginButton.style.display = state === 'Running' ? 'none' : '';
@@ -1190,16 +1128,14 @@
           devicesNode.appendChild(label);
         });
       }
-      if (hintNode) hintNode.textContent = connectionMode === 'direct'
-        ? (isEnglishUi() ? 'Direct LAN mode. Enter the computer IP or address manually.' : '局域网直连模式，手动输入电脑 IP 或地址。')
-        : (devices.length
-          ? (isEnglishUi() ? `Found ${devices.length} device(s) from your Tailscale account.` : `从 Tailscale 账号读取到 ${devices.length} 台设备。`)
-          : (isEnglishUi() ? 'Devices will be read from your Tailscale account after sign-in.' : '登录后会自动从 Tailscale 账号读取设备。'));
+      if (hintNode) hintNode.textContent = devices.length
+        ? (isEnglishUi() ? `Found ${devices.length} device(s) from your Tailscale account.` : `从 Tailscale 账号读取到 ${devices.length} 台设备。`)
+        : (isEnglishUi() ? 'Devices will be read from your Tailscale account after sign-in.' : '登录后会自动从 Tailscale 账号读取设备。')
     }
     const current = connectionPanel.querySelector('[data-hp-conn-current]');
     if (current) current.textContent = (isEnglishUi() ? 'Current page: ' : '当前页面：') + location.host;
     const connectButton = connectionPanel.querySelector('[data-hp-conn="connect"]');
-    if (connectButton) connectButton.disabled = connectionMode !== 'direct' && state !== 'Running';
+    if (connectButton) connectButton.disabled = state !== 'Running';
   }
 
   function injectConnectionNav(panel) {
@@ -1489,8 +1425,7 @@
       if (!state || now - state.time > 1200) {
         state = { time: now, value: {} };
         try {
-          state.value = JSON.parse((window.HarnessNative && window.HarnessNative.fileState
-            ? window.HarnessNative.fileState(name) : '{}') || '{}');
+          state.value = JSON.parse(window.HarnessNative.fileState(name) || '{}');
         } catch (_) {}
         fileStateCache.set(name, state);
       }
