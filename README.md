@@ -30,7 +30,13 @@ https://github.com/tihuzushi/dsh-phone-bridge
 
 ## 设置页
 
-装好并重启后，HARNESS 的**设置**里会多出一栏 **DSH Phone Assistant**：显示配对码、监听地址、上游端口、各网卡（含 Tailscale）的连接地址，都带一键复制；右下角有服务状态（运行中 / 未运行）。
+装好并重启后，HARNESS 的**设置**里会多出一栏 **DSH Phone Assistant**：显示配对码、监听地址、上游端口和端口设置，都带一键复制；右上角有服务状态（运行中 / 未运行）。
+
+连接地址**只显示 Tailscale 一条**，并实时检测这台电脑上的 Tailscale：
+
+- 已连接：显示 `100.x` 地址、设备名和版本
+- 已安装但没登录 / 没连接：提示去电脑上打开 Tailscale 并 Connect
+- 没安装：直接给出 [Tailscale 下载页](https://tailscale.com/download/windows) 的跳转按钮
 
 ![settings section](docs/settings-section.png)
 
@@ -42,7 +48,7 @@ https://github.com/tihuzushi/dsh-phone-bridge
 http://127.0.0.1:8765/_dsh-phone
 ```
 
-页面会显示 6 位配对码和各网卡对应的地址（配对信息只在本机回环地址显示，局域网里的其他人看不到）。
+页面会显示 6 位配对码和 Tailscale 地址（配对信息只在本机回环地址显示，局域网里的其他人看不到）。
 
 手机 App 里填「地址 + 配对码」即可；也可以直接把 `http://<地址>:8765/pair?code=<配对码>` 发到手机上打开。
 
@@ -52,7 +58,7 @@ http://127.0.0.1:8765/_dsh-phone
 
 插件监听的是 `0.0.0.0:8765`，**包含 Tailscale 虚拟网卡**，所以：
 
-- 电脑登录 Tailscale 后，启动日志里会多出一条 `Tailscale: http://100.x.x.x:8765/pair?code=...`
+- 电脑登录 Tailscale 后，设置页会显示 `Tailscale: http://100.x.x.x:8765`，启动日志里也会多一条
 - 手机和电脑在同一个 tailnet 里，填这个 `100.x` 地址就能在外网用
 - 手机端**不需要装 Tailscale App**——HARNESS Phone 的 APK 内置了 tsnet，在 App 里登录一次即可
 

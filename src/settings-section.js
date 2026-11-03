@@ -46,6 +46,22 @@ function runSettingsSection() {
     return btn
   }
 
+  function linkButton(text, href) {
+    const a = el('a', 'display:inline-flex;align-items:center;gap:6px;border:1px solid var(--dsw-alias-border-l2, #3a3a40);background:transparent;color:var(--dsw-alias-label-primary, #ececf1);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;text-decoration:none;', text)
+    a.href = href
+    a.target = '_blank'
+    a.rel = 'noreferrer noopener'
+    a.addEventListener('click', (event) => {
+      // The desktop app owns this window; hand the URL to the system browser
+      // instead of navigating the app itself.
+      try {
+        event.preventDefault()
+        window.open(href, '_blank', 'noopener,noreferrer')
+      } catch (_) {}
+    })
+    return a
+  }
+
   function row(label, value, opts) {
     const wrap = el('div', 'display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--dsw-alias-border-l1, #2a2a2e);')
     wrap.appendChild(el('span', 'flex:0 0 92px;color:var(--dsw-alias-label-secondary, #9b9ba6);font-size:13px;', label))
@@ -144,14 +160,39 @@ function runSettingsSection() {
     portBox.appendChild(controls)
     section.appendChild(portBox)
 
-    if (data.addresses && data.addresses.length) {
-      const addr = card('连接地址')
-      for (const item of data.addresses) addr.appendChild(row(item.name, item.url, { copy: item.url }))
-      section.appendChild(addr)
-    }
+    // Only Tailscale is offered: the phone app ships its own tailnet node, so a
+    // LAN address would work on one Wi-Fi and nowhere else.
+    const ts = data.tailscale || { state: 'checking' }
+    const tsCard = card('Tailscale')
+    const dotColor = ts.state === 'running' ? '#2ecc71' : (ts.state === 'not-installed' ? '#e74c3c' : '#e6b422')
+    const stateText = ts.state === 'running' ? '已连接'
+      : ts.state === 'not-installed' ? '这台电脑没有安装'
+      : ts.state === 'needs-login' ? '已安装，但没有登录'
+      : ts.state === 'stopped' ? '已安装，但没有连接'
+      : '正在检测'
+    const statusRow = el('div', 'display:flex;align-items:center;gap:8px;padding:12px 0 10px;')
+    statusRow.appendChild(el('span', 'width:8px;height:8px;border-radius:50%;display:inline-block;background:' + dotColor + ';'))
+    statusRow.appendChild(el('span', 'font-size:14px;color:var(--dsw-alias-label-primary, #ececf1);', stateText))
+    if (ts.version) statusRow.appendChild(el('span', 'font-size:12px;color:var(--dsw-alias-label-secondary, #9b9ba6);', ts.version))
+    tsCard.appendChild(statusRow)
 
-    section.appendChild(el('div', 'font-size:12px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
-      '在手机的 HARNESS Phone 里填上面任意一个地址 + 配对码即可连接。同一个 Wi-Fi 用局域网地址，外网两端登录同一个 Tailscale。'))
+    if (ts.state === 'running' && ts.ip) {
+      tsCard.appendChild(row('地址', ts.url || ('http://' + ts.ip + ':' + data.port), { copy: ts.url || ('http://' + ts.ip + ':' + data.port) }))
+      if (ts.hostname) tsCard.appendChild(row('设备', ts.hostname))
+      tsCard.appendChild(el('div', 'padding:10px 0 12px;font-size:12px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+        '手机连同一个 Tailnet，在 HARNESS Phone 里填上面的地址和配对码即可。同一个 Wi-Fi 也不再需要局域网地址。'))
+    } else if (ts.state === 'not-installed') {
+      tsCard.appendChild(el('div', 'padding:0 0 10px;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+        '手机端已经带了自己的 Tailscale 节点，但电脑这一端需要装一个并登录同一账号，手机才连得回来。'))
+      tsCard.appendChild(linkButton('下载安装 Tailscale', ts.downloadUrl || 'https://tailscale.com/download/windows'))
+      tsCard.appendChild(el('div', 'padding:8px 0 12px;font-size:12px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+        '装好并登录后回到这里，状态会自动变成“已连接”。'))
+    } else {
+      tsCard.appendChild(el('div', 'padding:0 0 10px;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+        '在电脑上打开 Tailscale，登录并点“Connect”；连上以后这里会显示 100.x 的地址。'))
+      tsCard.appendChild(linkButton('打开 Tailscale 管理后台', 'https://login.tailscale.com/admin/machines'))
+    }
+    section.appendChild(tsCard)
   }
 
   // A <script> tag is not subject to CORS, so JSONP reaches the bridge from the
