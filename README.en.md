@@ -40,9 +40,9 @@ encrypted relay is the fallback, and the relay only forwards ciphertext.
 
 <https://space.bilibili.com/157183587>
 
-![Mobile: the UI when not connected](docs/phone-offline.png)
+<img src="docs/phone-offline.png" width="300" alt="Mobile: the UI when not connected">
 
-![Mobile: side drawer](docs/phone-drawer.png)
+<img src="docs/phone-drawer.png" width="300" alt="Mobile: side drawer">
 
 ---
 
@@ -130,7 +130,7 @@ The DSH Web GUI only listens on `127.0.0.1`, so the phone (a different device) c
 
 ## Settings Page
 
-![settings section](docs/settings-section.png)
+<img src="docs/settings-section.png" width="520" alt="settings section">
 
 **设置 → DSH Phone Assistant** (Settings → DSH Phone Assistant) contains:
 
@@ -157,7 +157,7 @@ At the very bottom of the settings page, 「版本 → 检查更新」 (Version 
 - New version → a dialog shows the old and new version numbers; click 「立即更新」 (Update Now) to copy files such as `lib/index.js`, `lib/client.js` and `package.json` over the installed directory (backed up to the system temp directory before overwriting, with a full rollback on failure)
 - Update finished → it prompts 「重启 DeepSeek Harness 即可完成更新」 (Restart DeepSeek Harness to complete the update)
 
-![Update dialog](docs/update-dialog.png)
+<img src="docs/update-dialog.png" width="380" alt="Update dialog">
 
 The hot update only replaces files on disk; the new code runs only after you **restart DSH once**.
 

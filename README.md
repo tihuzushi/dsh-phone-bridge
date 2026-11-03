@@ -35,9 +35,9 @@
 
 <https://space.bilibili.com/157183587>
 
-![手机版：未连接时的界面](docs/phone-offline.png)
+<img src="docs/phone-offline.png" width="300" alt="手机版：未连接时的界面">
 
-![手机版：侧边抽屉](docs/phone-drawer.png)
+<img src="docs/phone-drawer.png" width="300" alt="手机版：侧边抽屉">
 
 ---
 
@@ -125,7 +125,7 @@ DSH 的 Web GUI 只监听 `127.0.0.1`，手机（另一台设备）本来连不�
 
 ## 设置页
 
-![settings section](docs/settings-section.png)
+<img src="docs/settings-section.png" width="520" alt="settings section">
 
 **设置 → DSH Phone Assistant** 里有：
 
@@ -152,7 +152,7 @@ DSH 的 Web GUI 只监听 `127.0.0.1`，手机（另一台设备）本来连不�
 - 有新版本 → 弹窗显示新旧版本号，点「立即更新」把 `lib/index.js`、`lib/client.js`、`package.json` 等文件覆盖到已安装目录（覆盖前备份到系统临时目录，失败整体回滚）
 - 更新完成 → 提示「重启 DeepSeek Harness 即可完成更新」
 
-![更新弹窗](docs/update-dialog.png)
+<img src="docs/update-dialog.png" width="380" alt="更新弹窗">
 
 热更新只替换磁盘上的文件，**重启一次 DSH** 才会跑新代码。
 

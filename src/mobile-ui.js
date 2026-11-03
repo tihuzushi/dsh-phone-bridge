@@ -1214,6 +1214,35 @@
     });
   }
 
+  /**
+   * React owns the settings nav: a cell is "active" only when
+   * `row.id === active`, and it also writes aria-current. Our bridge nav button
+   * and the click handling around it mutate that same list by hand, so a cell
+   * can be left carrying AnXs9G_active while React believes it is inactive —
+   * which paints two highlighted rows. Trust aria-current (React's own value)
+   * and drop the class everywhere else.
+   */
+  function normalizeSettingsNav(panel) {
+    // While our own connection panel is open it owns the highlight instead of
+    // whichever page React thinks is current, so leave the nav alone.
+    if (connectionPanel && connectionPanel.style.display !== 'none') return;
+    const nav = panel.querySelector('.AnXs9G_navList');
+    if (!nav) return;
+    const cells = Array.from(nav.querySelectorAll('.AnXs9G_navCell'));
+    if (!cells.length) return;
+    const current = cells.filter((cell) => cell.getAttribute('aria-current') === 'true');
+    const keep = current.length === 1 ? current[0] : null;
+    cells.forEach((cell) => {
+      if (cell.id === 'hp-connection-nav') return;
+      if (keep) {
+        if (cell !== keep) cell.classList.remove('AnXs9G_active');
+        else cell.classList.add('AnXs9G_active');
+      } else if (current.length > 1) {
+        cell.classList.remove('AnXs9G_active');
+      }
+    });
+  }
+
   function injectSettings(panel) {
     document.body.classList.toggle('hp-settings-open', !!panel);
     if (!panel) return;
@@ -1221,6 +1250,7 @@
       closeRightbarUi();
     }
     if (sidebarIsOpen() && !rightbarIsOpen()) toggleSidebar();
+    normalizeSettingsNav(panel);
     hideNativeUnsupportedSettings(panel);
     injectAppearanceControl(panel);
     injectLocalFontSetting(panel);
