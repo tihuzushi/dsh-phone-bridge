@@ -28,6 +28,12 @@ https://github.com/tihuzushi/dsh-phone-bridge
 
 支持 npm 包名、Git 仓库、本地目录三种方式。装完**重启 DSH**，它会出现在「已安装插件」里。
 
+## 设置页
+
+装好并重启后，HARNESS 的**设置**里会多出一栏 **DSH Phone Assistant**：显示配对码、监听地址、上游端口、各网卡（含 Tailscale）的连接地址，都带一键复制；右下角有服务状态（运行中 / 未运行）。
+
+![settings section](docs/settings-section.png)
+
 ## 配对
 
 重启后，在**电脑上**打开：
