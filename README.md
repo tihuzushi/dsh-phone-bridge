@@ -26,7 +26,7 @@ DSH 的 Web GUI 只监听 `127.0.0.1`，手机（另一台设备）本来连不�
 https://github.com/tihuzushi/dsh-phone-bridge
 ```
 
-支持 npm 包名、Git 仓库、本地目录三种方式。装完**重启 DSH**，它会出现在「已安装插件」里。
+必须是这种 `https://` 的完整地址（DSH 的输入框认这个；`github:user/repo` 那种简写它不认）。也支持 npm 包名和本地目录。装完**重启 DSH**，它会出现在「已安装插件」里。
 
 ## 设置页
 
