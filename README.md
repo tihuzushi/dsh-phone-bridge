@@ -1,3 +1,5 @@
+[English](README.en.md) | 中文
+
 # DSH Phone Bridge
 
 把 **DeepSeek Harness** 装进手机的完整方案。手机通过 Tailscale 直连你自己的电脑，不经过任何中转服务器。
