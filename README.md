@@ -17,7 +17,9 @@
 
 <https://space.bilibili.com/157183587>
 
-![screenshot](docs/screenshot.png)
+![手机版：未连接时的界面](docs/phone-offline.png)
+
+![手机版：侧边抽屉](docs/phone-drawer.png)
 
 ---
 
