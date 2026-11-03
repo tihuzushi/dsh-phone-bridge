@@ -894,9 +894,13 @@ html.hp-mobile .hp-connection-nav svg {
 }
 /* Our own entry keeps its own highlight class — reusing AnXs9G_active made it
    look like a second page was selected, and mutating React's class was part of
-   what left the previous row highlighted. */
+   what left the previous row highlighted. The tint is deliberately different
+   from the neutral page pill: this is an action, not a settings page, so the
+   real page can stay highlighted while the two no longer read as a double
+   selection. */
 #hp-connection-nav.hp-conn-active {
-  background: var(--dsw-specific-sidebar-nav-item-active) !important;
+  background: color-mix(in srgb, var(--dsw-static-deepseek-100, #4d6bfe) 14%, transparent) !important;
+  color: var(--dsw-static-deepseek-100, #4d6bfe) !important;
 }
 html.hp-mobile .hp-connection-panel {
   display: none;
