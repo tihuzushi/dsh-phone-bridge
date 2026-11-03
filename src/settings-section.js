@@ -106,6 +106,25 @@ function runSettingsSection() {
     const pair = card('配对')
     pair.appendChild(row('配对码', data.pairingCode, { mono: true, copy: data.pairingCode }))
     pair.appendChild(row('配对页', data.pairUrl || '', { copy: data.pairUrl || '' }))
+    const pairRow = el('div', 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0 6px;')
+    const regen = el('button', SMALL_BTN, '重新生成配对码')
+    regen.type = 'button'
+    regen.addEventListener('click', () => { regenerateCode(regen) })
+    pairRow.appendChild(regen)
+    const throttleLabel = el('label', 'display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--dsw-alias-label-secondary, #9b9ba6);cursor:pointer;')
+    const throttleBox = el('input')
+    throttleBox.type = 'checkbox'
+    throttleBox.checked = data.throttle !== false
+    throttleBox.style.accentColor = '#4d6bfe'
+    throttleBox.addEventListener('change', () => { setThrottle(throttleBox.checked) })
+    throttleLabel.appendChild(throttleBox)
+    throttleLabel.appendChild(document.createTextNode('配对重试节流'))
+    pairRow.appendChild(throttleLabel)
+    pair.appendChild(pairRow)
+    pair.appendChild(el('div', 'padding:0 0 12px;font-size:12px;line-height:1.6;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+      data.throttle === false
+        ? '节流已关闭：手机输错码重试时不会被限速，可以随便重试。'
+        : '配对码不对时只把重试间隔拉长（最长 15 秒），不锁死；关掉这个开关就不再限速。'))
     section.appendChild(pair)
 
     const svc = card('服务')
@@ -216,12 +235,52 @@ function runSettingsSection() {
 
   let updateState = { checking: false, note: '', hasUpdate: false }
 
+  function bridgeBase() {
+    return BRIDGE || ('http://127.0.0.1:' + (data && data.port ? data.port : 8765))
+  }
+
+  // Rotating the code also clears the retry throttle state, so a stale code on the
+  // phone can never leave it stuck.
+  async function regenerateCode(button) {
+    if (button.disabled) return
+    button.disabled = true
+    const label = button.textContent
+    button.textContent = '正在生成…'
+    try {
+      const res = await fetch(bridgeBase() + '/__dsh-phone/pairing', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: '{}',
+        cache: 'no-store',
+      })
+      const info = await res.json()
+      if (!info.ok) throw new Error(info.error || '生成失败')
+      await refresh()
+    } catch (error) {
+      button.disabled = false
+      button.textContent = '生成失败'
+      setTimeout(() => { button.textContent = label }, 1800)
+    }
+  }
+
+  async function setThrottle(enabled) {
+    try {
+      await fetch(bridgeBase() + '/__dsh-phone/pairing', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ throttle: enabled, rotate: false }),
+        cache: 'no-store',
+      })
+      await refresh()
+    } catch (_) {}
+  }
+
   async function checkForUpdate() {
     if (updateState.checking) return
     updateState = { checking: true, note: '', hasUpdate: false }
     render()
     try {
-      const base = BRIDGE || ('http://127.0.0.1:' + (data ? data.port : 8765))
+      const base = bridgeBase()
       const res = await fetch(base + '/__dsh-phone/update?t=' + Date.now(), { cache: 'no-store' })
       const info = await res.json()
       if (!info.ok) throw new Error(info.error || '检查失败')
@@ -279,7 +338,7 @@ function runSettingsSection() {
     button.disabled = true
     button.textContent = '更新中…'
     try {
-      const base = BRIDGE || ('http://127.0.0.1:' + (data ? data.port : 8765))
+      const base = bridgeBase()
       const res = await fetch(base + '/__dsh-phone/update', { method: 'POST', cache: 'no-store' })
       const info = await res.json()
       if (!info.ok) throw new Error(info.error || '更新失败')
