@@ -176,11 +176,12 @@ function runSettingsSection() {
     if (ts.version) statusRow.appendChild(el('span', 'font-size:12px;color:var(--dsw-alias-label-secondary, #9b9ba6);', ts.version))
     tsCard.appendChild(statusRow)
 
-    if (ts.state === 'running' && ts.ip) {
-      tsCard.appendChild(row('地址', ts.url || ('http://' + ts.ip + ':' + data.port), { copy: ts.url || ('http://' + ts.ip + ':' + data.port) }))
+    if (ts.state === 'running') {
+      // The phone carries its own tailnet node and discovers this machine through
+      // the account, so the address is not something anyone has to type.
       if (ts.hostname) tsCard.appendChild(row('设备', ts.hostname))
       tsCard.appendChild(el('div', 'padding:10px 0 12px;font-size:12px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
-        '手机连同一个 Tailnet，在 HARNESS Phone 里填上面的地址和配对码即可。同一个 Wi-Fi 也不再需要局域网地址。'))
+        '手机端登录同一个 Tailscale 账号，在设备列表里选这台电脑，再填配对码。'))
     } else if (ts.state === 'not-installed') {
       tsCard.appendChild(el('div', 'padding:0 0 10px;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
         '手机端已经带了自己的 Tailscale 节点，但电脑这一端需要装一个并登录同一账号，手机才连得回来。'))
@@ -189,7 +190,7 @@ function runSettingsSection() {
         '装好并登录后回到这里，状态会自动变成“已连接”。'))
     } else {
       tsCard.appendChild(el('div', 'padding:0 0 10px;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
-        '在电脑上打开 Tailscale，登录并点“Connect”；连上以后这里会显示 100.x 的地址。'))
+        '在电脑上打开 Tailscale，登录并点“Connect”；连上以后手机才能找到这台电脑。'))
       tsCard.appendChild(linkButton('打开 Tailscale 管理后台', 'https://login.tailscale.com/admin/machines'))
     }
     section.appendChild(tsCard)
