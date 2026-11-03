@@ -30,9 +30,10 @@ encrypted relay is the fallback, and the relay only forwards ciphertext.
 | **[tihuzushi/dsh-phone-bridge](https://github.com/tihuzushi/dsh-phone-bridge)** ← this repository | The **plugin** installed into DSH on the computer: bridge service + mobile UI + pairing code / port settings |
 | **[tihuzushi/dsh-phone-bridge-app](https://github.com/tihuzushi/dsh-phone-bridge-app)** | The **Android client** (APK): bundles user-space Tailscale via `tsnet`, so it does not occupy the system VPN |
 
-📦 Phone APK (Releases)
+📦 Phone APK
 
-<https://github.com/tihuzushi/dsh-phone-bridge-app/releases/latest>
+- **China mirror (fast)**: <https://www.hanhaichem.cn/wp-content/uploads/2026/11/DSH-Phone-Bridge-2.4.2.apk>
+- GitHub Releases (often slow from mainland China): <https://github.com/tihuzushi/dsh-phone-bridge-app/releases/latest>
 
 🎬 Author's Bilibili homepage
 

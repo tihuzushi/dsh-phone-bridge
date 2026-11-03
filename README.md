@@ -25,9 +25,10 @@
 | **[tihuzushi/dsh-phone-bridge](https://github.com/tihuzushi/dsh-phone-bridge)** ← 本仓库 | 装在电脑 DSH 里的**插件**：桥接服务 + 手机版界面 + 配对码 / 端口设置 |
 | **[tihuzushi/dsh-phone-bridge-app](https://github.com/tihuzushi/dsh-phone-bridge-app)** | **安卓客户端**（APK）：内置 `tsnet` 用户态 Tailscale，不占用系统 VPN |
 
-📦 手机 APK（Releases）
+📦 手机 APK
 
-<https://github.com/tihuzushi/dsh-phone-bridge-app/releases/latest>
+- **国内直链（推荐，快）**：<https://www.hanhaichem.cn/wp-content/uploads/2026/11/DSH-Phone-Bridge-2.4.2.apk>
+- GitHub Releases（国内可能很慢）：<https://github.com/tihuzushi/dsh-phone-bridge-app/releases/latest>
 
 🎬 作者 B 站主页
 
