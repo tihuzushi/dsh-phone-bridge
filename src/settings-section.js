@@ -10,6 +10,7 @@ function runSettingsSection() {
 
   let BRIDGE = null
   const PORT_CANDIDATES = Array.from({ length: 26 }, (_, i) => 8765 + i)
+  const LAST_PORT_KEY = 'hp-phone-bridge-port'
   const LABEL = 'DSH Phone Assistant'
   const SUBTITLE = '配对码与手机服务状态'
 
@@ -153,7 +154,33 @@ function runSettingsSection() {
       '在手机的 HARNESS Phone 里填上面任意一个地址 + 配对码即可连接。同一个 Wi-Fi 用局域网地址，外网两端登录同一个 Tailscale。'))
   }
 
+  // A <script> tag is not subject to CORS, so JSONP reaches the bridge from the
+  // desktop window too (its origin is dsh-app://app, not the loopback server).
+  let jsonpSeq = 0
+  function jsonpStatus(base, timeout) {
+    return new Promise((resolve) => {
+      const name = '__hpStatus' + (++jsonpSeq) + Date.now().toString(36)
+      const script = document.createElement('script')
+      let settled = false
+      const finish = (value) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timer)
+        try { delete window[name] } catch (_) { window[name] = undefined }
+        try { script.remove() } catch (_) {}
+        resolve(value)
+      }
+      const timer = setTimeout(() => finish(null), timeout || 800)
+      window[name] = (payload) => finish(payload && payload.ok ? payload : null)
+      script.onerror = () => finish(null)
+      script.src = base + '/__dsh-phone/status.js?cb=' + encodeURIComponent(name) + '&t=' + Date.now()
+      ;(document.head || document.documentElement).appendChild(script)
+    })
+  }
+
   async function readStatus(base) {
+    const viaJsonp = await jsonpStatus(base)
+    if (viaJsonp) return viaJsonp
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), 600)
     try {
@@ -163,6 +190,15 @@ function runSettingsSection() {
     } finally {
       clearTimeout(timer)
     }
+  }
+
+  function portOrder() {
+    const remembered = Number(localStorage.getItem(LAST_PORT_KEY) || 0)
+    const all = PORT_CANDIDATES.map((p) => 'http://127.0.0.1:' + p)
+    const first = []
+    if (BRIDGE) first.push(BRIDGE)
+    if (remembered >= 1024) first.push('http://127.0.0.1:' + remembered)
+    return [...first, ...all.filter((url) => !first.includes(url))]
   }
 
   async function refresh() {
@@ -178,16 +214,19 @@ function runSettingsSection() {
         return
       }
       // The bridge may move to another port when 8765 is taken, so probe the range.
-      const candidates = BRIDGE ? [BRIDGE, ...PORT_CANDIDATES.map((p) => 'http://127.0.0.1:' + p)] : PORT_CANDIDATES.map((p) => 'http://127.0.0.1:' + p)
+      const candidates = portOrder()
       let payload = null
       let firstError = null
       let tried = 0
       for (const base of candidates) {
         tried += 1
-        if (BRIDGE && base !== BRIDGE && payload) break
         try {
           payload = await readStatus(base)
-          if (payload) { BRIDGE = base; break }
+          if (payload) {
+            BRIDGE = base
+            try { localStorage.setItem(LAST_PORT_KEY, String(new URL(base).port)) } catch (_) {}
+            break
+          }
         } catch (error) {
           if (!firstError) firstError = String((error && error.message) || error)
         }
