@@ -169,6 +169,14 @@ function runSettingsSection() {
     if (polling) return
     polling = true
     try {
+      // Preferred path: the host inlined the status into this page.
+      if (window.__HP_STATUS__ && window.__HP_STATUS__.pairingCode) {
+        data = window.__HP_STATUS__
+        failure = null
+        polling = false
+        render()
+        return
+      }
       // The bridge may move to another port when 8765 is taken, so probe the range.
       const candidates = BRIDGE ? [BRIDGE, ...PORT_CANDIDATES.map((p) => 'http://127.0.0.1:' + p)] : PORT_CANDIDATES.map((p) => 'http://127.0.0.1:' + p)
       let payload = null
