@@ -980,9 +980,8 @@
       <section class="hp-conn-card" data-hp-app-card>
         <div class="hp-conn-card-title">App</div>
         <div class="hp-conn-status" data-hp-app-version>正在读取版本…</div>
-        <div class="hp-conn-row">
-          <button type="button" class="hp-btn" data-hp-conn="checkUpdate">检查更新</button>
-          <button type="button" class="hp-btn" data-hp-conn="openAppSettings">App 设置</button>
+        <div class="hp-conn-row hp-conn-row-single">
+          <button type="button" class="hp-btn hp-btn-primary" data-hp-conn="checkUpdate">检查更新</button>
         </div>
       </section>`;
   }
@@ -1017,9 +1016,9 @@
       connectionPanel.addEventListener('click', handleConnectionClick);
       content.appendChild(connectionPanel);
     }
-    previousActiveNav = nav && nav.querySelector('.AnXs9G_active:not(#hp-connection-nav)');
-    if (nav) nav.querySelectorAll('.AnXs9G_active').forEach((item) => item.classList.remove('AnXs9G_active'));
-    navButton.classList.add('AnXs9G_active');
+    // Never touch the React-managed AnXs9G_active class here: the highlight for
+    // the real pages belongs to React alone. Our own entry gets its own class.
+    navButton.classList.add('hp-conn-active');
     const scrollToConnection = () => {
       const scroller = navButton.parentElement;
       if (!scroller) return;
@@ -1048,7 +1047,7 @@
     connectionTimer = setInterval(refreshConnectionPanel, 1500);
   }
 
-  function closeConnectionPanel(restoreActive = true) {
+  function closeConnectionPanel() {
     if (connectionTimer) {
       clearInterval(connectionTimer);
       connectionTimer = null;
@@ -1060,12 +1059,8 @@
     const panel = document.querySelector('.AnXs9G_panel');
     if (panel) {
       panel.querySelectorAll('.AnXs9G_options').forEach((item) => item.style.removeProperty('display'));
-      const nav = panel.querySelector('.AnXs9G_navList');
       const navButton = document.getElementById('hp-connection-nav');
-      if (navButton) navButton.classList.remove('AnXs9G_active');
-      if (restoreActive && previousActiveNav && nav && nav.contains(previousActiveNav)) {
-        previousActiveNav.classList.add('AnXs9G_active');
-      }
+      if (navButton) navButton.classList.remove('hp-conn-active');
     }
   }
 
@@ -1096,10 +1091,6 @@
     }
     if (value === 'checkUpdate') {
       nativeJson('checkUpdate');
-      return;
-    }
-    if (value === 'openAppSettings') {
-      nativeJson('openConnectionSettings');
       return;
     }
     if (value === 'connect') {
@@ -1189,8 +1180,14 @@
   }
 
   function injectConnectionNav(panel) {
-    const nav = panel.querySelector('.AnXs9G_navList');
-    if (!nav || document.getElementById('hp-connection-nav')) return;
+    // Append to .AnXs9G_nav, not to .AnXs9G_navList: the list is reconciled by
+    // React, and injecting a node into it shifts the sibling bookkeeping React
+    // keeps for its own cells — which is what left the previous page's cell
+    // carrying AnXs9G_active after a switch. The nav container only ever holds
+    // the title and the list, so a third child there is out of React's way.
+    const nav = panel.querySelector('.AnXs9G_nav');
+    const list = panel.querySelector('.AnXs9G_navList');
+    if (!nav || !list || document.getElementById('hp-connection-nav')) return;
     const button = document.createElement('button');
     button.type = 'button';
     button.id = 'hp-connection-nav';
@@ -1205,8 +1202,7 @@
       openConnectionPanel();
     });
     nav.appendChild(button);
-    nav.addEventListener('click', (event) => {
-      if (event.target.closest('#hp-connection-nav')) return;
+    list.addEventListener('click', (event) => {
       if (connectionPanel && connectionPanel.style.display !== 'none') closeConnectionPanel(false);
     }, true);
   }
@@ -1528,6 +1524,12 @@
     document.querySelectorAll('.AnXs9G_content').forEach((content) => {
       content.dataset.hpGeneral = '0';
     });
+    // Defensive: if anything else ever leaves a second row highlighted, drop the
+    // extra one once React has committed. Peacetime this is a no-op.
+    setTimeout(() => {
+      const panel = document.querySelector('.AnXs9G_panel');
+      if (panel) normalizeSettingsNav(panel);
+    }, 60);
   }, true);
 
   document.addEventListener('click', (event) => {

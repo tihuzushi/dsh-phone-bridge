@@ -892,6 +892,12 @@ html.hp-mobile .hp-connection-nav svg {
   height: 16px;
   flex: 0 0 16px;
 }
+/* Our own entry keeps its own highlight class — reusing AnXs9G_active made it
+   look like a second page was selected, and mutating React's class was part of
+   what left the previous row highlighted. */
+#hp-connection-nav.hp-conn-active {
+  background: var(--dsw-specific-sidebar-nav-item-active) !important;
+}
 html.hp-mobile .hp-connection-panel {
   display: none;
   padding: 4px 0 calc(30px + env(safe-area-inset-bottom));
@@ -1213,4 +1219,9 @@ html.hp-mobile ::-moz-selection {
    list is faded: the highlight has to stay opaque or it disappears entirely. */
 html.hp-mobile body.hp-connection-lost ::selection {
   background-color: rgba(77, 107, 254, 0.65) !important;
+}
+
+/* A single action fills the row instead of sitting in a half-width slot. */
+html.hp-mobile .hp-conn-row.hp-conn-row-single .hp-btn {
+  flex: 1 1 100%;
 }
