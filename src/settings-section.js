@@ -95,6 +95,53 @@ function runSettingsSection() {
     if (data.upstream) svc.appendChild(row('上游', data.upstream))
     section.appendChild(svc)
 
+    const portBox = card('端口')
+    const note = data.port !== data.preferredPort
+      ? '偏好端口 ' + data.preferredPort + ' 被占用，已自动改用 ' + data.port + '。'
+      : '当前使用 ' + data.port + '。'
+    portBox.appendChild(el('div', 'padding:10px 0 0;font-size:12px;line-height:1.6;color:var(--dsw-alias-label-secondary,#9b9ba6);', note))
+    const controls = el('div', 'display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:10px 0 12px;')
+    const input = el('input', 'width:92px;padding:5px 9px;border-radius:8px;border:1px solid var(--dsw-alias-border-l2,#3a3a40);background:transparent;color:var(--dsw-alias-label-primary,#ececf1);font-size:13px;')
+    input.type = 'number'
+    input.min = '1024'
+    input.max = '65535'
+    input.value = String(data.preferredPort)
+    const label = el('label', 'display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--dsw-alias-label-secondary,#9b9ba6);')
+    const checkbox = el('input')
+    checkbox.type = 'checkbox'
+    checkbox.checked = data.autoPort !== false
+    label.appendChild(checkbox)
+    label.appendChild(document.createTextNode('被占用时自动换端口'))
+    const apply = el('button', 'border:1px solid var(--dsw-alias-border-l2,#3a3a40);background:transparent;color:var(--dsw-alias-label-primary,#ececf1);border-radius:8px;padding:4px 12px;font-size:12px;cursor:pointer;', '应用')
+    apply.type = 'button'
+    apply.addEventListener('click', async () => {
+      const next = Number(input.value)
+      if (!(next >= 1024 && next <= 65535)) {
+        apply.textContent = '端口无效'
+        setTimeout(() => { apply.textContent = '应用' }, 1500)
+        return
+      }
+      apply.textContent = '应用中…'
+      try {
+        await fetch(BRIDGE + '/__dsh-phone/config', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ port: next, autoPort: checkbox.checked }),
+        })
+        apply.textContent = '已应用'
+        setTimeout(() => { apply.textContent = '应用' }, 1500)
+        setTimeout(() => { refresh() }, 1200)
+      } catch (_) {
+        apply.textContent = '失败'
+        setTimeout(() => { apply.textContent = '应用' }, 1500)
+      }
+    })
+    controls.appendChild(input)
+    controls.appendChild(label)
+    controls.appendChild(apply)
+    portBox.appendChild(controls)
+    section.appendChild(portBox)
+
     if (data.addresses && data.addresses.length) {
       const addr = card('连接地址')
       for (const item of data.addresses) addr.appendChild(row(item.name, item.url, { copy: item.url }))
