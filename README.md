@@ -28,7 +28,7 @@
 📦 手机 APK
 
 - **短链（永远最新版，推荐）**：<https://www.hanhaichem.cn/dsh.apk>
-- 当前版本直链（2.4.3）：<https://www.hanhaichem.cn/wp-content/uploads/2026/11/DSH-Phone-Bridge-2.4.3.apk>
+- 当前版本直链（2.4.4）：<https://www.hanhaichem.cn/wp-content/uploads/2026/11/DSH-Phone-Bridge-2.4.4.apk>
 - GitHub Releases（国内可能很慢）：<https://github.com/tihuzushi/dsh-phone-bridge-app/releases/latest>
 
 🎬 作者 B 站主页

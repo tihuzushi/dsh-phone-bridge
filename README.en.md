@@ -33,7 +33,7 @@ encrypted relay is the fallback, and the relay only forwards ciphertext.
 📦 Phone APK
 
 - **Short link (always the newest build)**: <https://www.hanhaichem.cn/dsh.apk>
-- Direct link for this version (2.4.3): <https://www.hanhaichem.cn/wp-content/uploads/2026/11/DSH-Phone-Bridge-2.4.3.apk>
+- Direct link for this version (2.4.4): <https://www.hanhaichem.cn/wp-content/uploads/2026/11/DSH-Phone-Bridge-2.4.4.apk>
 - GitHub Releases (often slow from mainland China): <https://github.com/tihuzushi/dsh-phone-bridge-app/releases/latest>
 
 🎬 Author's Bilibili homepage
