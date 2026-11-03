@@ -13,6 +13,7 @@ function runSettingsSection() {
   const LAST_PORT_KEY = 'hp-phone-bridge-port'
   const LABEL = 'DSH Phone Assistant'
   const SUBTITLE = '配对码与手机服务状态'
+  const APP_RELEASES_URL = 'https://github.com/tihuzushi/dsh-phone-bridge-app/releases/latest'
 
   let navButton = null
   let optionsHost = null
@@ -213,6 +214,14 @@ function runSettingsSection() {
       tsCard.appendChild(linkButton('打开 Tailscale 管理后台', 'https://login.tailscale.com/admin/machines'))
     }
     section.appendChild(tsCard)
+
+    const appCard = card('APP 客户端')
+    appCard.appendChild(el('div', 'padding:10px 0 6px;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+      '手机端安装 DSH Phone Bridge。APK 自带 Tailscale 节点，手机不用再装 Tailscale App，登录同一账号后就能找到这台电脑。'))
+    appCard.appendChild(linkButton('下载 APP 客户端', APP_RELEASES_URL))
+    appCard.appendChild(el('div', 'padding:10px 0 12px;font-size:12px;line-height:1.6;color:var(--dsw-alias-label-secondary, #9b9ba6);word-break:break-all;',
+      APP_RELEASES_URL))
+    section.appendChild(appCard)
 
     const verCard = card('版本')
     verCard.appendChild(row('当前版本', (data.version || '未知') + (data.build ? '  ·  ' + data.build : '')))

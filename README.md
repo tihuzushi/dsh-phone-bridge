@@ -1,13 +1,98 @@
-# dsh-phone-bridge
+# DSH Phone Bridge
 
-Phone access for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness), packaged as **one plugin**:
-the bridge and the mobile shell UI live in the same DSH plugin, so there is no second process, no
-`start-bridge.cmd` and no port scanning — the plugin runs inside the host and already knows which loopback
-port the web GUI is on.
+把 **DeepSeek Harness** 装进手机的完整方案。手机通过 Tailscale 直连你自己的电脑，不经过任何中转服务器。
 
-把「手机能连上电脑」和「手机上显示什么界面」合成一个 DSH 插件：装一次，重启 DSH，手机就能用。
+项目分两个仓库：
+
+| 仓库 | 作用 |
+|---|---|
+| **[tihuzushi/dsh-phone-bridge](https://github.com/tihuzushi/dsh-phone-bridge)** ← 本仓库 | 装在电脑 DSH 里的**插件**：桥接服务 + 手机版界面 + 配对码 / 端口设置 |
+| **[tihuzushi/dsh-phone-bridge-app](https://github.com/tihuzushi/dsh-phone-bridge-app)** | **安卓客户端**（APK）：内置 `tsnet` 用户态 Tailscale，不占用系统 VPN |
+
+📦 手机 APK（Releases）
+
+<https://github.com/tihuzushi/dsh-phone-bridge-app/releases/latest>
+
+🎬 作者 B 站主页
+
+<https://space.bilibili.com/157183587>
 
 ![screenshot](docs/screenshot.png)
+
+---
+
+## 从零开始配置（照着做完就能用）
+
+### 第 0 步：准备
+
+| 需要的 | 说明 |
+|---|---|
+| 一台 Windows 电脑 | 装好 DeepSeek Harness（DSH），能正常打开界面 |
+| 一台安卓手机 | Android 8.0（API 26）及以上 |
+| 一个 Tailscale 账号 | 免费版够用，<https://login.tailscale.com/start> 注册 |
+
+### 第 1 步：电脑装 Tailscale（先做这个）
+
+1. 打开 <https://tailscale.com/download/windows> 下载安装
+2. 托盘里登录你的 Tailscale 账号，点 **Connect**
+3. 确认状态是 Connected
+
+> 手机端虽然自带 Tailscale，但**电脑也必须在同一个 tailnet 里**，手机才找得到它。
+
+### 第 2 步：电脑装这个插件
+
+DSH 里：**设置 → 插件 → 添加插件**，填：
+
+```
+https://github.com/tihuzushi/dsh-phone-bridge
+```
+
+必须是这种 `https://` 的完整地址（输入框不认 `github:user/repo` 简写）。装完**重启 DSH**。
+
+### 第 3 步：确认插件起来了
+
+**设置 → DSH Phone Assistant**，应该看到：
+
+- 状态：**运行中**（绿点）
+- **配对码**：6 位数字，下一步要用
+- **Tailscale**：已连接 + 你的设备名
+- 服务：监听 `0.0.0.0:8765`
+
+任何一项不对：
+
+| 现象 | 处理 |
+|---|---|
+| 未运行 | 插件没启动，重启 DSH；再不行看 8765 是否被别的程序占用 |
+| Tailscale 红点「没有安装」 | 回第 1 步 |
+| Tailscale「已安装，但没有连接」 | 打开电脑上的 Tailscale 点 Connect |
+
+### 第 4 步：手机装 App
+
+1. 打开 <https://github.com/tihuzushi/dsh-phone-bridge-app/releases/latest>
+2. 下载 `DSH-Phone-Bridge-<版本>.apk` 装到手机上（允许「安装未知来源应用」）
+
+### 第 5 步：手机登录 Tailscale
+
+App 右上角进 **连接设置** → 「打开 Tailscale 登录页」→ 浏览器里登录**同一个账号** → 回 App 等状态变成「已连接」。
+
+### 第 6 步：配对
+
+1. App 的「连接设备」里选中你的电脑（列表来自你的 tailnet）
+2. 填上第 3 步看到的 **6 位配对码**
+3. 点「保存并连接」
+
+连上以后 DSH 界面就在手机里打开了，手机版布局由这个插件注入。
+
+### 常见问题
+
+| 现象 | 原因 / 处理 |
+|---|---|
+| 手机一直闪屏、进不去 | 配对码不对，App 在自动重试。看电脑设置页的当前码；插件 0.4.5 起不会因此锁死 |
+| 设备列表是空的 | 手机端 Tailscale 没登录，或电脑没连上 tailnet |
+| 换了电脑 / 重装了插件 | 配对码会重新生成，重新填一次 |
+| 想换端口 | 设置页「端口」卡片里改，或勾「被占用时自动换端口」 |
+
+---
 
 ## 它做了什么
 
@@ -18,71 +103,46 @@ port the web GUI is on.
 
 DSH 的 Web GUI 只监听 `127.0.0.1`，手机（另一台设备）本来连不上；这个插件就是那条通道。
 
-## 安装
-
-在 HARNESS 的 **插件 → 添加插件** 里填：
-
-```
-https://github.com/tihuzushi/dsh-phone-bridge
-```
-
-必须是这种 `https://` 的完整地址（DSH 的输入框认这个；`github:user/repo` 那种简写它不认）。也支持 npm 包名和本地目录。装完**重启 DSH**，它会出现在「已安装插件」里。
-
 ## 设置页
-
-装好并重启后，HARNESS 的**设置**里会多出一栏 **DSH Phone Assistant**：显示配对码、监听地址、上游端口和端口设置，都带一键复制；右上角有服务状态（运行中 / 未运行）。
-
-Tailscale 一块**只显示这台电脑的设备名**，并实时检测它有没有装好、连上：
-
-- 已连接：显示设备名和 Tailscale 版本（手机端自己会找到这台机器，不用填地址）
-- 已安装但没登录 / 没连接：提示去电脑上打开 Tailscale 并 Connect
-- 没安装：直接给出 [Tailscale 下载页](https://tailscale.com/download/windows) 的跳转按钮
 
 ![settings section](docs/settings-section.png)
 
-### 版本与更新
+**设置 → DSH Phone Assistant** 里有：
 
-设置页最下面一块是**版本**：显示当前版本号（例如 `0.4.1 · 0.4.1-mw06jo8f`），旁边是**检查更新**。
+- **配对**：配对码、配对页地址、`重新生成配对码`、`配对重试节流` 开关
+- **服务**：监听地址、上游 DSH 端口
+- **端口**：改端口 / 被占用时自动换端口
+- **Tailscale**：只显示这台电脑的设备名，并实时检测装没装、连没连；没装直接给下载按钮
+- **APP 客户端**：下载手机 APK 的按钮，跳到 [App 仓库的 Releases](https://github.com/tihuzushi/dsh-phone-bridge-app/releases/latest)
+- **版本**：当前插件版本 + **检查更新**
 
-- 点「检查更新」→ 用 GitHub API 取仓库 HEAD 的 commit，再读这个 commit 上的 `package.json` 比对版本（按 sha 取文件，避免 CDN 缓存导致新旧文件混在一起）
-- 有新版本 → 弹窗显示新旧版本号，点「立即更新」把仓库里的 `lib/index.js`、`lib/client.js`、`package.json` 等文件覆盖到已安装目录（覆盖前备份到系统临时目录，任一步失败整体回滚）
+### 配对码对不上
+
+没有冷却锁定了。输错只会把重试间隔拉长（1.5 秒起、最长 15 秒），**正确的码随时都能立刻通过**。
+
+- 手机提示「配对尝试过多」→ 电脑设置页看当前码
+- 想立刻换码 → 点「重新生成配对码」（同时清掉节流状态）
+- 想完全不管节流 → 关掉「配对重试节流」开关
+
+## 更新插件
+
+设置页最下面「版本 → 检查更新」：
+
+- 用 GitHub API 取仓库 HEAD 的 commit，再读这个 commit 上的 `package.json` 比版本（按 sha 取文件，避免 CDN 缓存把新旧文件混在一起）
+- 有新版本 → 弹窗显示新旧版本号，点「立即更新」把 `lib/index.js`、`lib/client.js`、`package.json` 等文件覆盖到已安装目录（覆盖前备份到系统临时目录，失败整体回滚）
 - 更新完成 → 提示「重启 DeepSeek Harness 即可完成更新」
 
 ![更新弹窗](docs/update-dialog.png)
 
-热更新只替换磁盘上的文件，不重启进程，所以**必须重启一次 DSH** 才会跑新代码。
-
-## 配对
-
-重启后，在**电脑上**打开：
-
-```
-http://127.0.0.1:8765/_dsh-phone
-```
-
-页面会显示 6 位配对码和这台电脑的设备名（配对信息只在本机回环地址显示，局域网里的其他人看不到）。
-
-手机 App 里登录同一个 Tailscale 账号、选中这台电脑，再填配对码即可。
-
-配对成功后手机会拿到一个 1 年有效的 cookie，之后不用再配。
-
-**配对码对不上怎么办**：没有冷却锁定了。输错只会把重试间隔拉长（1.5 秒起、最长 15 秒），**正确的码随时都能立刻通过**。设置页「配对」卡片里还有：
-
-- **重新生成配对码**：换一个新码，同时清掉重试节流状态
-- **配对重试节流** 开关：关掉以后手机怎么重试都不限速（默认开着，用来拦住 App 拿旧码自动刷 `/pair` 的死循环）
-
-> 注意：只有重装/删了状态文件才会换码，正常升级不会。如果手机一直用旧码重试，就会看到 WebView 反复闪、进不去界面——把电脑上的当前码填进手机就好。
+热更新只替换磁盘上的文件，**重启一次 DSH** 才会跑新代码。
 
 ## Tailscale
 
-插件监听的是 `0.0.0.0:8765`，**包含 Tailscale 虚拟网卡**，所以：
+插件监听 `0.0.0.0:8765`，包含 Tailscale 虚拟网卡：
 
-- 电脑登录 Tailscale 后，设置页会显示设备名，启动日志里也会多一条 `Tailscale: http://100.x.x.x:8765`
-- 手机和电脑在同一个 tailnet 里就能连，不管在同一个 Wi-Fi 还是外网
-- 手机端**不需要装 Tailscale App**——HARNESS Phone 的 APK 内置了 tsnet，在 App 里登录一次即可
-
-> App 端自 2.x 起只支持内置 Tailscale，1.x 的「局域网直连 / 手动填 IP」已经移除。
-> 桥接本身仍监听 `0.0.0.0`，所以局域网里的浏览器还是能打开配对页。
+- 电脑登录 Tailscale 后，设置页会显示设备名，启动日志里会多一条 `Tailscale: http://100.x.x.x:8765`
+- 手机和电脑在同一个 tailnet 里就能连，同一个 Wi-Fi 或外网都行
+- 手机端**不需要装 Tailscale App**——APK 内置了 `tsnet`，在 App 里登录一次即可
 
 ## 配置
 
@@ -91,32 +151,33 @@ http://127.0.0.1:8765/_dsh-phone
 ```json
 {
   "port": 8765,
-  "host": "0.0.0.0",
+  "autoPort": true,
+  "throttle": true,
   "pairingCode": "123456"
 }
 ```
 
-- 改端口 / 换配对码：改完**重启 DSH**
-- 想只给局域网用、不暴露到 Tailscale：把 `host` 改成具体网卡地址，比如 `192.168.1.10`
-
 ## 防火墙
 
-首次运行时 Windows 会弹「是否允许」，选**专用网络**允许即可。没弹窗但连不上，检查入站规则里 8765 端口。
+首次运行时 Windows 会弹「是否允许」，选**专用网络**允许。没弹窗但连不上，检查入站规则里的 8765 端口。
 
 ## 卸载
 
-插件 → 已安装插件 → `dsh-phone-bridge` → 卸载，重启 DSH。
-状态文件 `~/.dsh/phone-bridge.json` 可以留着（下次装回来还是同一个配对码），也可以删掉。
+DSH → 插件 → 已安装插件 → `dsh-phone-bridge` → 卸载，重启 DSH。
 
-## 说明与限制
+## 相关仓库
 
-- 插件活在 DSH 进程里：**DSH 没运行就没有监听**，这是和独立桥接程序唯一的体验差别
-- 如果 8765 被别的程序占用，插件只会在日志里报错、不会让 DSH 启动失败；改端口即可
-- 界面适配 DSH 0.2.x，靠 DOM 选择器定位元素，DSH 大版本升级后可能需要跟进
-- 手机端需要配套的 APK（`HARNESS Phone`），只装插件也可以在安卓浏览器里直接访问
+- **[tihuzushi/dsh-phone-bridge](https://github.com/tihuzushi/dsh-phone-bridge)** — 本仓库：电脑端 DSH 插件
+- **[tihuzushi/dsh-phone-bridge-app](https://github.com/tihuzushi/dsh-phone-bridge-app)** — 安卓客户端源码与 APK
 
-## License
+## 许可证
 
 MIT，见 [LICENSE](LICENSE)。
 
-社区项目，与 DeepSeek 官方无隶属关系；DeepSeek Harness 本身以 MIT 协议开源。
+---
+
+## 写这个的人
+
+B 站主页
+
+<https://space.bilibili.com/157183587>
