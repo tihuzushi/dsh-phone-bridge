@@ -87,8 +87,8 @@ function runSettingsSection() {
       return
     }
 
-    const pair = card('配对码')
-    pair.appendChild(row('码', data.pairingCode, { mono: true, copy: data.pairingCode }))
+    const pair = card('配对')
+    pair.appendChild(row('配对码', data.pairingCode, { mono: true, copy: data.pairingCode }))
     pair.appendChild(row('配对页', data.pairUrl || '', { copy: data.pairUrl || '' }))
     section.appendChild(pair)
 
