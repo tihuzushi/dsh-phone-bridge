@@ -758,7 +758,9 @@
   function injectLocalFontSetting(panel) {
     const content = panel.querySelector('.AnXs9G_content');
     if (!content) return;
-    if (!isGeneralSettingsContent(content)) {
+    const general = isGeneralSettingsContent(content);
+    content.dataset.hpGeneral = general ? '1' : '0';
+    if (!general) {
       content.querySelectorAll('.hp-local-font-row, .hp-download-row').forEach((node) => node.remove());
       return;
     }
@@ -901,7 +903,9 @@
   function injectDownloadFolderSetting(panel) {
     const content = panel.querySelector('.AnXs9G_content');
     if (!content) return;
-    if (!isGeneralSettingsContent(content)) {
+    const general = isGeneralSettingsContent(content);
+    content.dataset.hpGeneral = general ? '1' : '0';
+    if (!general) {
       content.querySelectorAll('.hp-download-row').forEach((node) => node.remove());
       return;
     }
@@ -1450,6 +1454,18 @@
       button.innerHTML = exists ? openIcon : downloadIcon;
     });
   }
+
+  // A settings nav click re-renders the section before any observer fires.
+  // Clearing the marker in the capture phase hides the injected rows in the same
+  // frame, so they cannot flash inside 插件 / 外观 / ….
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!target || typeof target.closest !== 'function') return;
+    if (!target.closest('.AnXs9G_navCell')) return;
+    document.querySelectorAll('.AnXs9G_content').forEach((content) => {
+      content.dataset.hpGeneral = '0';
+    });
+  }, true);
 
   document.addEventListener('click', (event) => {
     const button = event.target.closest('.hp-file-action');

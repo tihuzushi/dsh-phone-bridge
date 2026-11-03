@@ -1179,6 +1179,19 @@ html.hp-mobile .GRgSLq_root {
   padding-bottom: 0 !important;
 }
 
+/* ---------- injected rows belong to 通用 only ----------
+   Switching a settings section re-renders the content before the injector runs
+   again, so a row that is only removed in JS stays on screen for one frame and
+   flashes in 插件 / 外观 / …. Default to hidden and let the injector opt in. */
+html.hp-mobile .hp-download-row,
+html.hp-mobile .hp-local-font-row {
+  display: none !important;
+}
+html.hp-mobile .AnXs9G_content[data-hp-general="1"] .hp-download-row,
+html.hp-mobile .AnXs9G_content[data-hp-general="1"] .hp-local-font-row {
+  display: flex !important;
+}
+
 /* ---------- text selection ----------
    On a dark page Android WebView can paint the selection with the system accent
    while the glyphs keep their light colour, so the selected text reads as a
