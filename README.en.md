@@ -2,9 +2,28 @@ English | [中文](README.md)
 
 # DSH Phone Bridge
 
-A complete way to put **DeepSeek Harness** on your phone. The phone connects directly to your own computer over Tailscale, with no relay server in between.
+Bridge the **DeepSeek Harness** running on your own computer to your phone: the phone is the screen and keyboard, the compute stays on the computer.
 
-The project is split across two repositories:
+## First, what this is not: it is a bridge, not a phone build of DSH
+
+**DSH keeps running on your computer. What the phone opens is that computer's UI.**
+
+Model calls, file access and shell commands all happen on the computer; the
+phone only renders the screen and sends input. Which means:
+
+- **If the computer is off or offline, the phone cannot do anything** — it is a remote control, not a second DSH
+- Sessions, workspaces, plugins and API keys stay on the computer; no copy is kept on the phone
+- The phone does no heavy lifting, so even an old phone is fine
+
+**Remote connection is supported.** You do not need to be on the same Wi-Fi:
+phone on 4G/5G, computer at home — across cities and across carriers — as long
+as both are signed in to the same Tailscale account and both are online.
+
+The project itself **has no server**. The two ends try to connect peer-to-peer
+first; when that fails (for example both sides behind strict NAT) Tailscale's
+encrypted relay is the fallback, and the relay only forwards ciphertext.
+
+## The project is split across two repositories
 
 | Repository | Purpose |
 |---|---|
