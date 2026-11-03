@@ -176,6 +176,13 @@ DSH → 插件 → 已安装插件 → `dsh-phone-bridge` → 卸载，重启 DS
 
 MIT，见 [LICENSE](LICENSE)。
 
+本仓库**不含任何第三方代码**：只用了 Node 内置模块，没有运行时依赖。它跑在
+DeepSeek Harness 之上，调用的是 DSH 的插件 API（DSH 本身也是 MIT），没有复制
+DSH 的源码。
+
+安卓端那个仓库不一样 —— 它的 APK 里打包了 Tailscale 的二进制，许可证清单见
+[dsh-phone-bridge-app/THIRD-PARTY-NOTICES.md](https://github.com/tihuzushi/dsh-phone-bridge-app/blob/main/THIRD-PARTY-NOTICES.md)。
+
 ---
 
 ## 写这个的人
