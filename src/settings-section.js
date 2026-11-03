@@ -24,6 +24,23 @@ function runSettingsSection() {
   let failure = null
   let polling = false
   let active = false
+  let stylesInstalled = false
+
+  /* Our nav entry must never reuse React's own "AnXs9G_active": React keeps
+   * marking the page that was selected before, so borrowing the class left two
+   * rows highlighted at once. We use our own class instead, and while our page
+   * is open we neutralise the stale row React still believes is current. */
+  function installStyles() {
+    if (stylesInstalled) return
+    stylesInstalled = true
+    const style = document.createElement('style')
+    style.id = 'hp-ps-style'
+    style.textContent = [
+      '.hp-ps-nav.hp-ps-active { background: var(--dsw-specific-sidebar-nav-item-active) !important; }',
+      '.AnXs9G_navList.hp-ps-own > .AnXs9G_navCell.AnXs9G_active:not(.hp-ps-nav) { background: transparent !important; }'
+    ].join('\n')
+    ;(document.head || document.documentElement).appendChild(style)
+  }
 
   function el(tag, style, text) {
     const node = document.createElement(tag)
@@ -497,9 +514,11 @@ function runSettingsSection() {
     active = false
     if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null }
     if (navButton) {
-      navButton.classList.remove('AnXs9G_active')
+      navButton.classList.remove('hp-ps-active')
       navButton.removeAttribute('aria-current')
     }
+    const navList = document.querySelector('.AnXs9G_navList')
+    if (navList) navList.classList.remove('hp-ps-own')
     if (section && section.parentElement) section.parentElement.removeChild(section)
     for (const node of hidden) node.style.removeProperty('display')
     hidden = []
@@ -517,8 +536,10 @@ function runSettingsSection() {
       if (!hidden.includes(child)) hidden.push(child)
     }
     if (section.parentElement !== optionsHost) optionsHost.insertBefore(section, optionsHost.firstChild)
-    navButton.classList.add('AnXs9G_active')
-    navButton.setAttribute('aria-current', 'true')
+    navButton.classList.add('hp-ps-active')
+    navButton.removeAttribute('aria-current')
+    const navList = panel.querySelector('.AnXs9G_navList')
+    if (navList) navList.classList.add('hp-ps-own')
     render()
     refresh()
     if (refreshTimer) clearInterval(refreshTimer)
@@ -533,6 +554,7 @@ function runSettingsSection() {
     }
     const navList = panel.querySelector('.AnXs9G_navList')
     if (!navList) return
+    installStyles()
     ensureNodes()
     if (!navList.contains(navButton)) navList.appendChild(navButton)
     for (const cell of navList.querySelectorAll('button.AnXs9G_navCell')) {

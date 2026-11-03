@@ -1017,8 +1017,12 @@
       content.appendChild(connectionPanel);
     }
     // Never touch the React-managed AnXs9G_active class here: the highlight for
-    // the real pages belongs to React alone. Our own entry gets its own class.
+    // the real pages belongs to React alone. Our own entry gets its own class,
+    // and the list is marked so React's stale "current" row is not painted
+    // while our panel is open.
     navButton.classList.add('hp-conn-active');
+    const navList = panel.querySelector('.AnXs9G_navList');
+    if (navList) navList.classList.add('hp-conn-own');
     const scrollToConnection = () => {
       const scroller = navButton.parentElement;
       if (!scroller) return;
@@ -1061,6 +1065,8 @@
       panel.querySelectorAll('.AnXs9G_options').forEach((item) => item.style.removeProperty('display'));
       const navButton = document.getElementById('hp-connection-nav');
       if (navButton) navButton.classList.remove('hp-conn-active');
+      const navList = panel.querySelector('.AnXs9G_navList');
+      if (navList) navList.classList.remove('hp-conn-own');
     }
   }
 
@@ -1180,14 +1186,10 @@
   }
 
   function injectConnectionNav(panel) {
-    // Append to .AnXs9G_nav, not to .AnXs9G_navList: the list is reconciled by
-    // React, and injecting a node into it shifts the sibling bookkeeping React
-    // keeps for its own cells — which is what left the previous page's cell
-    // carrying AnXs9G_active after a switch. The nav container only ever holds
-    // the title and the list, so a third child there is out of React's way.
-    const nav = panel.querySelector('.AnXs9G_nav');
+    // The phone nav is a horizontal strip; the entry belongs inside the list so
+    // it scrolls with the other tabs.
     const list = panel.querySelector('.AnXs9G_navList');
-    if (!nav || !list || document.getElementById('hp-connection-nav')) return;
+    if (!list || document.getElementById('hp-connection-nav')) return;
     const button = document.createElement('button');
     button.type = 'button';
     button.id = 'hp-connection-nav';
@@ -1201,8 +1203,9 @@
       event.stopPropagation();
       openConnectionPanel();
     });
-    nav.appendChild(button);
+    list.appendChild(button);
     list.addEventListener('click', (event) => {
+      if (event.target.closest('#hp-connection-nav')) return;
       if (connectionPanel && connectionPanel.style.display !== 'none') closeConnectionPanel(false);
     }, true);
   }
@@ -1243,35 +1246,6 @@
     });
   }
 
-  /**
-   * React owns the settings nav: a cell is "active" only when
-   * `row.id === active`, and it also writes aria-current. Our bridge nav button
-   * and the click handling around it mutate that same list by hand, so a cell
-   * can be left carrying AnXs9G_active while React believes it is inactive —
-   * which paints two highlighted rows. Trust aria-current (React's own value)
-   * and drop the class everywhere else.
-   */
-  function normalizeSettingsNav(panel) {
-    // While our own connection panel is open it owns the highlight instead of
-    // whichever page React thinks is current, so leave the nav alone.
-    if (connectionPanel && connectionPanel.style.display !== 'none') return;
-    const nav = panel.querySelector('.AnXs9G_navList');
-    if (!nav) return;
-    const cells = Array.from(nav.querySelectorAll('.AnXs9G_navCell'));
-    if (!cells.length) return;
-    const current = cells.filter((cell) => cell.getAttribute('aria-current') === 'true');
-    const keep = current.length === 1 ? current[0] : null;
-    cells.forEach((cell) => {
-      if (cell.id === 'hp-connection-nav') return;
-      if (keep) {
-        if (cell !== keep) cell.classList.remove('AnXs9G_active');
-        else cell.classList.add('AnXs9G_active');
-      } else if (current.length > 1) {
-        cell.classList.remove('AnXs9G_active');
-      }
-    });
-  }
-
   function injectSettings(panel) {
     document.body.classList.toggle('hp-settings-open', !!panel);
     if (!panel) return;
@@ -1279,7 +1253,6 @@
       closeRightbarUi();
     }
     if (sidebarIsOpen() && !rightbarIsOpen()) toggleSidebar();
-    normalizeSettingsNav(panel);
     hideNativeUnsupportedSettings(panel);
     injectAppearanceControl(panel);
     injectLocalFontSetting(panel);
@@ -1524,12 +1497,6 @@
     document.querySelectorAll('.AnXs9G_content').forEach((content) => {
       content.dataset.hpGeneral = '0';
     });
-    // Defensive: if anything else ever leaves a second row highlighted, drop the
-    // extra one once React has committed. Peacetime this is a no-op.
-    setTimeout(() => {
-      const panel = document.querySelector('.AnXs9G_panel');
-      if (panel) normalizeSettingsNav(panel);
-    }, 60);
   }, true);
 
   document.addEventListener('click', (event) => {
