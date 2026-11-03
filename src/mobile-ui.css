@@ -1178,3 +1178,26 @@ html.hp-mobile .GRgSLq_primary {
 html.hp-mobile .GRgSLq_root {
   padding-bottom: 0 !important;
 }
+
+/* ---------- text selection ----------
+   On a dark page Android WebView can paint the selection with the system accent
+   while the glyphs keep their light colour, so the selected text reads as a
+   solid blue block. The input method then draws its own translucent selection
+   panel on top of that, which makes it look like a rendering bug. Pin both
+   halves of the colour pair instead of inheriting them from the theme. */
+html.hp-mobile ::selection {
+  background-color: rgba(77, 107, 254, 0.42) !important;
+  color: var(--dsw-alias-label-primary, #ecedf0) !important;
+  -webkit-text-fill-color: var(--dsw-alias-label-primary, #ecedf0) !important;
+  text-shadow: none !important;
+}
+html.hp-mobile ::-moz-selection {
+  background-color: rgba(77, 107, 254, 0.42) !important;
+  color: var(--dsw-alias-label-primary, #ecedf0) !important;
+  text-shadow: none !important;
+}
+/* Same problem in the dimmed "connection lost" state, where the whole message
+   list is faded: the highlight has to stay opaque or it disappears entirely. */
+html.hp-mobile body.hp-connection-lost ::selection {
+  background-color: rgba(77, 107, 254, 0.65) !important;
+}

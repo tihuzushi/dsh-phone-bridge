@@ -1,6 +1,6 @@
 {
   "name": "dsh-phone-bridge",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "HARNESS Phone: the phone bridge and the mobile shell UI in a single DeepSeek Harness plugin. No extra process, no startup script.",
   "type": "module",
   "main": "lib/index.js",

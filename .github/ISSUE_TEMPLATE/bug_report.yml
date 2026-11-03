@@ -1,0 +1,99 @@
+name: 🐞 Bug 报告 / Bug report
+description: 连不上、界面错位、闪退、颜色不对……都算 bug。Anything broken — connection, layout, crash, colours.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### 先看一眼
+
+        1. 插件是不是最新版？设置 → DSH Phone Assistant → 版本 → 检查更新
+        2. 电脑上的 DSH 是不是重启过？**插件改完必须重启 DSH 才生效**
+        3. Tailscale 两端是不是同一个账号？
+
+        下面四项版本信息请务必填全，缺了我得先问你三轮，你也等得烦。
+        Please fill in every field below — without them I have to ask three rounds of questions first.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 出了什么问题 / What happened
+      description: 一句话说清现象。比如"手机版设置页打开后一片空白"。
+      placeholder: |
+        手机打开设置 → 插件，页面是空的，但电脑上正常。
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤 / Steps to reproduce
+      description: 我按这个顺序做，能不能复现？越具体越好。
+      placeholder: |
+        1. 手机连上电脑
+        2. 点右上角侧边栏
+        3. 点「设置」
+        4. 点「插件」
+        → 白屏，控制台报 xxx
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望的结果 / Expected
+      description: 本来应该是什么样？
+    validations:
+      required: false
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: 插件版本 / Plugin version
+      description: DSH 设置 → DSH Phone Assistant → 版本
+      placeholder: 0.4.8
+    validations:
+      required: true
+
+  - type: input
+    id: dsh-version
+    attributes:
+      label: DSH 版本 / DSH version
+      placeholder: 0.2.1-rc.5
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App 版本 / App version
+      description: 手机 App → 连接设置 → 当前版本（没用手机端就填「没装」）
+      placeholder: 2.4.2
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: 手机型号 + 安卓版本 / Phone model + Android version
+      placeholder: 小米 14 / Android 15
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 截图或日志 / Screenshots or logs
+      description: 直接把截图拖进来。有报错的话，把 DSH 那边控制台的输出也贴上来。
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 确认 / Checklist
+      options:
+        - label: 我搜过 Issues，没有重复 / I searched the existing issues
+          required: true
+        - label: 上面的版本信息是真填的，不是随便写的 / The versions above are accurate
+          required: true
