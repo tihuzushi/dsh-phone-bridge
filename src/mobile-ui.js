@@ -976,6 +976,14 @@
           <button type="button" class="hp-btn" data-hp-conn="refresh">刷新页面</button>
           <button type="button" class="hp-btn" data-hp-conn="repair">重新配对</button>
         </div>
+      </section>
+      <section class="hp-conn-card" data-hp-app-card>
+        <div class="hp-conn-card-title">App</div>
+        <div class="hp-conn-status" data-hp-app-version>正在读取版本…</div>
+        <div class="hp-conn-row">
+          <button type="button" class="hp-btn" data-hp-conn="checkUpdate">检查更新</button>
+          <button type="button" class="hp-btn" data-hp-conn="openAppSettings">App 设置</button>
+        </div>
       </section>`;
   }
 
@@ -1086,6 +1094,14 @@
       if (window.HarnessNative && window.HarnessNative.rePair) window.HarnessNative.rePair();
       return;
     }
+    if (value === 'checkUpdate') {
+      nativeJson('checkUpdate');
+      return;
+    }
+    if (value === 'openAppSettings') {
+      nativeJson('openConnectionSettings');
+      return;
+    }
     if (value === 'connect') {
       const selected = connectionPanel.querySelector('input[name="hp-device"]:checked');
       const target = selected ? selected.value : '';
@@ -1151,6 +1167,23 @@
     }
     const current = connectionPanel.querySelector('[data-hp-conn-current]');
     if (current) current.textContent = (isEnglishUi() ? 'Current page: ' : '当前页面：') + location.host;
+    // The native settings screen (and its update check) is only reachable from
+    // the setup card before the first connection, so once the app is connected
+    // this panel is the only place left to expose it. Hide the card entirely
+    // when the page is open in a plain browser (no native bridge).
+    const appCard = connectionPanel.querySelector('[data-hp-app-card]');
+    if (appCard) {
+      const version = nativeJson('appVersion', '');
+      if (!version) {
+        appCard.style.display = 'none';
+      } else {
+        appCard.style.display = '';
+        const versionNode = appCard.querySelector('[data-hp-app-version]');
+        if (versionNode) {
+          versionNode.textContent = (isEnglishUi() ? 'Current version ' : '当前版本 ') + version;
+        }
+      }
+    }
     const connectButton = connectionPanel.querySelector('[data-hp-conn="connect"]');
     if (connectButton) connectButton.disabled = state !== 'Running';
   }
