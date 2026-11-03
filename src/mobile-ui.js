@@ -447,6 +447,10 @@
   // Pages such as 插件 / 自动化任务 render their own full-width heading instead
   // of the session title row, so the drawer needs its own in-flow trigger there.
   function pageHeadingForMenu() {
+    // The session title row already carries its own trigger (#hp-menu-button). If it
+    // is on screen we must not also decorate some heading — that is what left a
+    // stray icon floating over the header after leaving 插件 / 自动化任务.
+    if (document.querySelector('.an3WzG_titleRow')) return null;
     const titles = Array.from(document.querySelectorAll('h1'));
     for (const title of titles) {
       if (!title.closest(PAGE_PANEL_SELECTOR)) continue;
@@ -488,15 +492,22 @@
     });
   }
 
+  function removeFloatingMenu() {
+    const floating = document.getElementById('hp-floating-menu');
+    if (floating) floating.remove();
+  }
+
   function ensurePageMenu(allowFloating) {
     const found = pageHeadingForMenu();
     if (!found) {
       clearPageMenu();
+      // Without a heading there is nothing inline to click, so (and only so) the
+      // floating trigger is allowed; on every other path it has to go away.
       if (allowFloating) ensureFloatingMenu();
+      else removeFloatingMenu();
       return;
     }
-    const floating = document.getElementById('hp-floating-menu');
-    if (floating) floating.remove();
+    removeFloatingMenu();
 
     let button = document.getElementById('hp-page-menu');
     if (!button) {
@@ -555,6 +566,8 @@
     const row = document.querySelector('.an3WzG_titleRow');
     ensurePageMenu(!row);
     if (!row) return;
+    // Chat page: the row owns the trigger, so any floating leftover is wrong.
+    removeFloatingMenu();
     const header = row.closest('.an3WzG_header');
     if (header) {
       const tabs = header.querySelector('.an3WzG_tabs');
