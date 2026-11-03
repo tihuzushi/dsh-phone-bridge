@@ -1,9 +1,8 @@
 /* DSH Phone Assistant — settings section for the desktop client.
  *
- * Adds one nav entry to the HARNESS settings dialog and swaps the whole content
- * area for a status panel (pairing code + bridge state). It renders *inside*
- * the existing content container so the dialog layout is never re-flowed, and it
- * installs itself only once per page even if the module is evaluated twice.
+ * The panel is rendered *inside* the stock `.AnXs9G_options` body, so the dialog
+ * header (打开配置文件 / close), the section title metrics and the scroll area all
+ * stay exactly as HARNESS renders them. Only the body children are swapped.
  */
 function runSettingsSection() {
   if (window.__hpPhoneSettingsSection) return
@@ -11,10 +10,12 @@ function runSettingsSection() {
 
   const BRIDGE = 'http://127.0.0.1:8765'
   const LABEL = 'DSH Phone Assistant'
+  const SUBTITLE = '配对码与手机服务状态'
 
   let navButton = null
-  let contentHost = null
+  let optionsHost = null
   let section = null
+  let hidden = []
   let refreshTimer = null
   let data = null
   let failure = null
@@ -61,13 +62,17 @@ function runSettingsSection() {
     if (!section) return
     section.textContent = ''
 
-    const head = el('div', 'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 0 16px;')
-    head.appendChild(el('div', 'font-size:20px;font-weight:650;color:var(--dsw-alias-label-primary, #ececf1);', LABEL))
-    const state = el('span', 'display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--dsw-alias-label-secondary, #9b9ba6);')
-    state.appendChild(el('span', 'width:8px;height:8px;border-radius:50%;display:inline-block;background:' + (data ? '#2ecc71' : '#e74c3c') + ';'))
-    state.appendChild(document.createTextNode(data ? '运行中' : '未运行'))
-    head.appendChild(state)
+    const head = el('div', 'display:flex;align-items:center;gap:10px;')
+    const title = el('h2', 'font-size:18px;font-weight:600;margin:0;color:var(--dsw-alias-label-primary, #ececf1);', LABEL)
+    title.className = 'XAL7Ya_heading'
+    head.appendChild(title)
+    const pill = el('span', 'display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 9px;border-radius:999px;border:1px solid var(--dsw-alias-border-l1, #2a2a2e);color:var(--dsw-alias-label-secondary, #9b9ba6);')
+    pill.appendChild(el('span', 'width:7px;height:7px;border-radius:50%;display:inline-block;background:' + (data ? '#2ecc71' : '#e74c3c') + ';'))
+    pill.appendChild(document.createTextNode(data ? '运行中' : '未运行'))
+    head.appendChild(pill)
     section.appendChild(head)
+
+    section.appendChild(el('div', 'margin:6px 0 18px;font-size:13px;line-height:1.5;color:var(--dsw-alias-label-secondary, #9b9ba6);', SUBTITLE))
 
     if (!data) {
       const box = card()
@@ -131,7 +136,7 @@ function runSettingsSection() {
       navButton.addEventListener('click', () => activate())
     }
     if (!section) {
-      section = el('div', 'display:none;min-width:0;')
+      section = el('div', 'min-width:0;')
       section.className = 'hp-ps-section'
     }
   }
@@ -144,23 +149,22 @@ function runSettingsSection() {
       navButton.removeAttribute('aria-current')
     }
     if (section && section.parentElement) section.parentElement.removeChild(section)
-    if (contentHost) {
-      for (const child of contentHost.children) child.style.removeProperty('display')
-    }
+    for (const node of hidden) node.style.removeProperty('display')
+    hidden = []
   }
 
   function activate() {
     ensureNodes()
     const panel = document.querySelector('.AnXs9G_panel')
-    contentHost = panel && panel.querySelector('.AnXs9G_content')
-    if (!contentHost) return
+    optionsHost = panel && panel.querySelector('.AnXs9G_options')
+    if (!optionsHost) return
     active = true
-    for (const child of contentHost.children) {
+    for (const child of [...optionsHost.children]) {
       if (child === section) continue
       child.style.setProperty('display', 'none', 'important')
+      if (!hidden.includes(child)) hidden.push(child)
     }
-    if (section.parentElement !== contentHost) contentHost.appendChild(section)
-    section.style.display = 'block'
+    if (section.parentElement !== optionsHost) optionsHost.insertBefore(section, optionsHost.firstChild)
     navButton.classList.add('AnXs9G_active')
     navButton.setAttribute('aria-current', 'true')
     render()
@@ -175,7 +179,6 @@ function runSettingsSection() {
       if (active) deactivate()
       return
     }
-    contentHost = panel.querySelector('.AnXs9G_content')
     const navList = panel.querySelector('.AnXs9G_navList')
     if (!navList) return
     ensureNodes()
@@ -185,10 +188,17 @@ function runSettingsSection() {
       cell.dataset.hpBound = '1'
       cell.addEventListener('click', () => { if (active) deactivate() })
     }
-    if (active && contentHost && section.parentElement !== contentHost) {
-      for (const child of contentHost.children) child.style.setProperty('display', 'none', 'important')
-      contentHost.appendChild(section)
-      section.style.display = 'block'
+    if (active) {
+      const host = panel.querySelector('.AnXs9G_options')
+      if (host && section.parentElement !== host) {
+        optionsHost = host
+        for (const child of [...host.children]) {
+          if (child === section) continue
+          child.style.setProperty('display', 'none', 'important')
+          if (!hidden.includes(child)) hidden.push(child)
+        }
+        host.insertBefore(section, host.firstChild)
+      }
     }
   }
 
