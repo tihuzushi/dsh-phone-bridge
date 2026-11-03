@@ -155,7 +155,7 @@ function runSettingsSection() {
 
   async function readStatus(base) {
     const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 1200)
+    const timer = setTimeout(() => controller.abort(), 600)
     try {
       const res = await fetch(base + '/__dsh-phone/status?t=' + Date.now(), { signal: controller.signal })
       if (!res.ok) return null
