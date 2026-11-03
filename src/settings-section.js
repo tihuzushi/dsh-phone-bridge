@@ -194,6 +194,122 @@ function runSettingsSection() {
       tsCard.appendChild(linkButton('打开 Tailscale 管理后台', 'https://login.tailscale.com/admin/machines'))
     }
     section.appendChild(tsCard)
+
+    const verCard = card('版本')
+    verCard.appendChild(row('当前版本', (data.version || '未知') + (data.build ? '  ·  ' + data.build : '')))
+    const verRow = el('div', 'display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0 12px;')
+    const checkBtn = el('button', SMALL_BTN + (updateState.checking ? 'opacity:.6;cursor:default;' : ''),
+      updateState.checking ? '检查更新中…' : (updateState.hasUpdate ? '有更新可用' : '检查更新'))
+    checkBtn.type = 'button'
+    checkBtn.addEventListener('click', () => { checkForUpdate() })
+    verRow.appendChild(checkBtn)
+    if (updateState.note) {
+      verRow.appendChild(el('span', 'font-size:12px;line-height:1.5;color:var(--dsw-alias-label-secondary, #9b9ba6);', updateState.note))
+    }
+    verCard.appendChild(verRow)
+    verCard.appendChild(el('div', 'padding:0 0 12px;font-size:12px;line-height:1.6;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+      '从 GitHub 仓库检查新版本，可以直接替换当前安装的文件；替换后重启 DeepSeek Harness 生效。'))
+    section.appendChild(verCard)
+  }
+
+  const SMALL_BTN = 'border:1px solid var(--dsw-alias-border-l2,#3a3a40);background:transparent;color:var(--dsw-alias-label-primary,#ececf1);border-radius:8px;padding:4px 12px;font-size:12px;cursor:pointer;'
+
+  let updateState = { checking: false, note: '', hasUpdate: false }
+
+  async function checkForUpdate() {
+    if (updateState.checking) return
+    updateState = { checking: true, note: '', hasUpdate: false }
+    render()
+    try {
+      const base = BRIDGE || ('http://127.0.0.1:' + (data ? data.port : 8765))
+      const res = await fetch(base + '/__dsh-phone/update?t=' + Date.now(), { cache: 'no-store' })
+      const info = await res.json()
+      if (!info.ok) throw new Error(info.error || '检查失败')
+      if (!info.hasUpdate) {
+        updateState = { checking: false, hasUpdate: false, note: '已是最新版本 ' + info.current }
+        render()
+        return
+      }
+      updateState = { checking: false, hasUpdate: true, note: '发现新版本 ' + info.latest + '（当前 ' + info.current + '）' }
+      render()
+      openUpdateDialog(info)
+    } catch (error) {
+      updateState = { checking: false, hasUpdate: false, note: '检查更新失败：' + ((error && error.message) || error) }
+      render()
+    }
+  }
+
+  let updateDialog = null
+
+  function closeUpdateDialog() {
+    if (updateDialog && updateDialog.parentElement) updateDialog.parentElement.removeChild(updateDialog)
+    updateDialog = null
+  }
+
+  function dialogShell(title) {
+    closeUpdateDialog()
+    const overlay = el('div', 'position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);')
+    const box = el('div', 'width:min(440px,calc(100vw - 40px));border:1px solid var(--dsw-alias-border-l1,#2a2a2e);border-radius:16px;background:var(--dsw-alias-bg-layer-2,#1c1c20);color:var(--dsw-alias-label-primary,#ececf1);padding:20px 22px 18px;box-shadow:0 20px 60px rgba(0,0,0,.55);')
+    const heading = el('div', 'font-size:16px;font-weight:600;margin:0 0 10px;', title)
+    box.appendChild(heading)
+    overlay.appendChild(box)
+    document.body.appendChild(overlay)
+    updateDialog = overlay
+    return { overlay, box, heading }
+  }
+
+  function openUpdateDialog(info) {
+    const { box } = dialogShell('发现新版本 ' + info.latest)
+    box.appendChild(el('div', 'font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary,#9b9ba6);',
+      '当前版本 ' + info.current + '，仓库里是 ' + info.latest + '。点击“立即更新”会从 GitHub 下载并替换已安装的文件，完成后重启 DeepSeek Harness 生效。'))
+    const actions = el('div', 'display:flex;justify-content:flex-end;gap:10px;margin-top:18px;')
+    const later = el('button', SMALL_BTN + 'padding:6px 14px;', '稍后')
+    later.type = 'button'
+    later.addEventListener('click', closeUpdateDialog)
+    const now = el('button', 'border:1px solid var(--dsw-alias-state-business-primary,#4d6bfe);background:var(--dsw-alias-state-business-primary,#4d6bfe);color:#fff;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;', '立即更新')
+    now.type = 'button'
+    now.addEventListener('click', () => { runUpdate(now) })
+    actions.appendChild(later)
+    actions.appendChild(now)
+    box.appendChild(actions)
+  }
+
+  async function runUpdate(button) {
+    if (button.disabled) return
+    button.disabled = true
+    button.textContent = '更新中…'
+    try {
+      const base = BRIDGE || ('http://127.0.0.1:' + (data ? data.port : 8765))
+      const res = await fetch(base + '/__dsh-phone/update', { method: 'POST', cache: 'no-store' })
+      const info = await res.json()
+      if (!info.ok) throw new Error(info.error || '更新失败')
+      if (!info.updated) {
+        const { box } = dialogShell('已经是最新版本')
+        box.appendChild(el('div', 'font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary,#9b9ba6);',
+          '当前已经是 ' + info.to + '，不需要更新。'))
+        appendDone(box)
+        return
+      }
+      const { box } = dialogShell('更新完成')
+      box.appendChild(el('div', 'font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary,#9b9ba6);',
+        '已从 ' + info.from + ' 更新到 ' + info.to + '。重启 DeepSeek Harness 即可完成更新。'))
+      appendDone(box)
+    } catch (error) {
+      button.disabled = false
+      button.textContent = '重试'
+      const { box } = dialogShell('更新失败')
+      box.appendChild(el('div', 'font-size:13px;line-height:1.7;color:#e05c5c;', String((error && error.message) || error)))
+      appendDone(box)
+    }
+  }
+
+  function appendDone(box) {
+    const actions = el('div', 'display:flex;justify-content:flex-end;margin-top:18px;')
+    const done = el('button', 'border:1px solid var(--dsw-alias-state-business-primary,#4d6bfe);background:var(--dsw-alias-state-business-primary,#4d6bfe);color:#fff;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;', '知道了')
+    done.type = 'button'
+    done.addEventListener('click', closeUpdateDialog)
+    actions.appendChild(done)
+    box.appendChild(actions)
   }
 
   // A <script> tag is not subject to CORS, so JSONP reaches the bridge from the

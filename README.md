@@ -40,6 +40,16 @@ Tailscale 一块**只显示这台电脑的设备名**，并实时检测它有没
 
 ![settings section](docs/settings-section.png)
 
+### 版本与更新
+
+设置页最下面一块是**版本**：显示当前版本号（例如 `0.4.0 · 0.4.0-mw06hwe8`），旁边是**检查更新**。
+
+- 点「检查更新」→ 读 `raw.githubusercontent.com` 上这个仓库的 `package.json` 比对版本
+- 有新版本 → 弹窗显示新旧版本号，点「立即更新」直接把仓库里的 `lib/index.js`、`lib/client.js`、`package.json` 等文件覆盖到已安装目录（覆盖前备份到系统临时目录，失败会回滚）
+- 更新完成 → 提示「重启 DeepSeek Harness 即可完成更新」
+
+热更新只替换磁盘上的文件，不重启进程，所以**必须重启一次 DSH** 才会跑新代码。
+
 ## 配对
 
 重启后，在**电脑上**打开：
