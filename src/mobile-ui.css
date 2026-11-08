@@ -611,6 +611,32 @@ html.hp-mobile .AnXs9G_close {
   flex: 0 0 auto !important;
 }
 
+/* The settings rows are laid out for a desktop width, and the class names that
+   used to describe them are hashed per build — they change whenever the app
+   updates, so a rule that targets them by name silently stops working and the
+   rows hang over the edge of the phone screen. Cap the sheet by structure
+   instead: nothing inside may be wider than the content box, and every box
+   counts its padding into its width. */
+html.hp-mobile .AnXs9G_panel,
+html.hp-mobile .AnXs9G_content,
+html.hp-mobile .AnXs9G_options {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+html.hp-mobile .AnXs9G_content :where(div,section,main,aside,ul,ol,li,p,label,h1,h2,h3,h4),
+html.hp-mobile .AnXs9G_options :where(div,section,main,aside,ul,ol,li,p,label,h1,h2,h3,h4) {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+/* Flex children may shrink below their content, otherwise a wide control on
+   the right pushes the row past the screen edge. */
+html.hp-mobile .AnXs9G_content :where(div,section,li) > *,
+html.hp-mobile .AnXs9G_options :where(div,section,li) > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
 /* local-only appearance (sits where the desktop Appearance section is) */
 html.hp-mobile .hp-appearance {
   width: 100% !important;
@@ -911,6 +937,52 @@ html.hp-mobile .hp-connection-panel {
 }
 html.hp-mobile .hp-connection-panel.hp-open {
   display: block;
+}
+/* When the app's own settings sheet cannot host our panel (its layout
+   changed), the connection settings open as a full screen sheet of their own
+   instead of not opening at all. */
+html.hp-mobile .hp-connection-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  background: var(--dsw-alias-bg-canvas, #ffffff);
+  color: var(--dsw-alias-label-primary);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+html.hp-mobile .hp-connection-overlay .hp-conn-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  background: var(--dsw-alias-bg-canvas, #ffffff);
+  border-bottom: 1px solid var(--dsw-alias-border-l1, #ececf1);
+}
+html.hp-mobile .hp-connection-overlay .hp-conn-head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+html.hp-mobile .hp-conn-close {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 50%;
+  border: 1px solid var(--dsw-alias-border-l2, #dedee4);
+  background: var(--dsw-alias-bg-layer-2, #f3f3f5);
+  color: var(--dsw-alias-label-primary);
+  font-size: 20px;
+  line-height: 1;
+}
+html.hp-mobile .hp-connection-overlay .hp-connection-panel {
+  display: block;
+  padding: 0 16px calc(30px + env(safe-area-inset-bottom));
 }
 html.hp-mobile .hp-conn-top {
   display: flex;

@@ -1003,39 +1003,60 @@
 
   function openConnectionPanel() {
     const panel = document.querySelector('.AnXs9G_panel');
-    if (!panel) return;
-    const content = panel.querySelector('.AnXs9G_content');
-    const nav = panel.querySelector('.AnXs9G_navList');
+    const content = panel ? panel.querySelector('.AnXs9G_content') : null;
     const navButton = document.getElementById('hp-connection-nav');
-    if (!content || !navButton) return;
     if (!connectionPanel) {
       connectionPanel = document.createElement('section');
       connectionPanel.id = 'hp-connection-panel';
       connectionPanel.className = 'hp-connection-panel';
       connectionPanel.innerHTML = connectionPanelHtml();
       connectionPanel.addEventListener('click', handleConnectionClick);
-      content.appendChild(connectionPanel);
+    }
+    if (content) {
+      // In place: the panel is one more page of the app's own settings sheet.
+      const overlay = document.getElementById('hp-connection-overlay');
+      if (overlay) overlay.remove();
+      if (connectionPanel.parentElement !== content) content.appendChild(connectionPanel);
+      content.querySelectorAll('.AnXs9G_options').forEach((item) => item.style.setProperty('display', 'none', 'important'));
+    } else {
+      // The app's settings sheet is not there (its layout changed, or the
+      // sheet is not open): open a full screen sheet of our own rather than
+      // doing nothing at all.
+      let overlay = document.getElementById('hp-connection-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'hp-connection-overlay';
+        overlay.className = 'hp-connection-overlay';
+        overlay.innerHTML = '<div class="hp-conn-head"><h2>连接设置</h2>'
+          + '<button type="button" class="hp-conn-close" aria-label="关闭">×</button></div>';
+        overlay.addEventListener('click', (event) => {
+          if (event.target.closest('.hp-conn-close')) closeConnectionPanel(false);
+        });
+        document.body.appendChild(overlay);
+      }
+      if (connectionPanel.parentElement !== overlay) overlay.appendChild(connectionPanel);
     }
     // Never touch the React-managed AnXs9G_active class here: the highlight for
     // the real pages belongs to React alone. Our own entry gets its own class,
     // and the list is marked so React's stale "current" row is not painted
     // while our panel is open.
-    navButton.classList.add('hp-conn-active');
-    const navList = panel.querySelector('.AnXs9G_navList');
-    if (navList) navList.classList.add('hp-conn-own');
-    const scrollToConnection = () => {
-      const scroller = navButton.parentElement;
-      if (!scroller) return;
-      const left = navButton.offsetLeft - Math.max(0, (scroller.clientWidth - navButton.offsetWidth) / 2);
-      scroller.scrollLeft = Math.max(0, left);
-      try {
-        navButton.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      } catch (_) {}
-    };
-    requestAnimationFrame(scrollToConnection);
-    setTimeout(scrollToConnection, 80);
-    setTimeout(scrollToConnection, 320);
-    content.querySelectorAll('.AnXs9G_options').forEach((item) => item.style.setProperty('display', 'none', 'important'));
+    const navList = panel ? panel.querySelector('.AnXs9G_navList') : null;
+    if (navButton) {
+      navButton.classList.add('hp-conn-active');
+      if (navList) navList.classList.add('hp-conn-own');
+      const scrollToConnection = () => {
+        const scroller = navButton.parentElement;
+        if (!scroller) return;
+        const left = navButton.offsetLeft - Math.max(0, (scroller.clientWidth - navButton.offsetWidth) / 2);
+        scroller.scrollLeft = Math.max(0, left);
+        try {
+          navButton.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        } catch (_) {}
+      };
+      requestAnimationFrame(scrollToConnection);
+      setTimeout(scrollToConnection, 80);
+      setTimeout(scrollToConnection, 320);
+    }
     connectionPanel.style.display = 'block';
     requestAnimationFrame(() => connectionPanel.classList.add('hp-open'));
     connectionConfig = { target: '', code: '' };
@@ -1060,6 +1081,8 @@
       connectionPanel.classList.remove('hp-open');
       connectionPanel.style.display = 'none';
     }
+    const overlay = document.getElementById('hp-connection-overlay');
+    if (overlay) overlay.remove();
     const panel = document.querySelector('.AnXs9G_panel');
     if (panel) {
       panel.querySelectorAll('.AnXs9G_options').forEach((item) => item.style.removeProperty('display'));
@@ -1188,26 +1211,35 @@
   function injectConnectionNav(panel) {
     // The phone nav is a horizontal strip; the entry belongs inside the list so
     // it scrolls with the other tabs.
-    const list = panel.querySelector('.AnXs9G_navList');
-    if (!list || document.getElementById('hp-connection-nav')) return;
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.id = 'hp-connection-nav';
-    button.className = 'AnXs9G_navCell hp-connection-nav';
-    button.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none"
-      stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M9 15l6-6"/><path d="M7.5 10.5l-2 2a3.5 3.5 0 0 0 5 5l2-2"/>
-      <path d="M16.5 13.5l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg><span>连接设置</span>`;
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      openConnectionPanel();
-    });
-    list.appendChild(button);
-    list.addEventListener('click', (event) => {
-      if (event.target.closest('#hp-connection-nav')) return;
-      if (connectionPanel && connectionPanel.style.display !== 'none') closeConnectionPanel(false);
-    }, true);
+    const list = panel ? panel.querySelector('.AnXs9G_navList') : null;
+    if (!list) return;
+    let button = document.getElementById('hp-connection-nav');
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.id = 'hp-connection-nav';
+      button.className = 'AnXs9G_navCell hp-connection-nav';
+      button.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 15l6-6"/><path d="M7.5 10.5l-2 2a3.5 3.5 0 0 0 5 5l2-2"/>
+        <path d="M16.5 13.5l2-2a3.5 3.5 0 0 0-5-5l-2 2"/></svg><span>连接设置</span>`;
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openConnectionPanel();
+      });
+      list.appendChild(button);
+    } else if (button.parentElement !== list) {
+      // The app re-rendered its list and dropped our entry: put it back.
+      list.appendChild(button);
+    }
+    if (!list.__hpConnCloseBound) {
+      list.__hpConnCloseBound = true;
+      list.addEventListener('click', (event) => {
+        if (event.target.closest('#hp-connection-nav')) return;
+        if (connectionPanel && connectionPanel.style.display !== 'none') closeConnectionPanel(false);
+      }, true);
+    }
   }
 
   function hideAddWorkspace() {
@@ -1259,7 +1291,8 @@
     injectDownloadFolderSetting(panel);
     injectConnectionNav(panel);
     localizeCustomUi();
-    if (connectionPanel && !panel.contains(connectionPanel)) {
+    if (connectionPanel && !panel.contains(connectionPanel)
+        && !document.getElementById('hp-connection-overlay')) {
       closeConnectionPanel(false);
       connectionPanel = null;
     }
@@ -1268,6 +1301,30 @@
   function injectSettingsCard() {
     const panel = document.querySelector('.AnXs9G_panel');
     injectSettings(panel);
+  }
+
+  /**
+   * The settings sheet is opened by the app long after the plugin started, so
+   * looking for it once is not enough: the connection entry was often never
+   * injected at all, which is why the tab could not be opened. Watch for the
+   * sheet instead, and put the entry back when the app re-renders its list.
+   */
+  let settingsWatcher = null;
+  let lastSettingsPanel = null;
+  function ensureSettingsWatch() {
+    if (settingsWatcher) return;
+    settingsWatcher = setInterval(() => {
+      if (document.hidden) return;
+      const panel = document.querySelector('.AnXs9G_panel');
+      if (panel !== lastSettingsPanel) {
+        lastSettingsPanel = panel;
+        injectSettings(panel);
+        return;
+      }
+      if (panel && !document.getElementById('hp-connection-nav')) {
+        injectConnectionNav(panel);
+      }
+    }, 600);
   }
 
   function injectConnectionNavForPanel() {
@@ -1606,6 +1663,7 @@
       watchFrame();
       ensureBrand();
       injectSettingsCard();
+      ensureSettingsWatch();
       decorateFileActions();
     }
   });
@@ -1617,6 +1675,7 @@
     watchFrame();
     ensureBrand();
     injectSettingsCard();
+    ensureSettingsWatch();
     decorateFileActions();
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
