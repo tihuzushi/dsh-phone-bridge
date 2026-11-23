@@ -51,13 +51,15 @@
 | 一台安卓手机 | Android 8.0（API 26）及以上 |
 | 一个 Tailscale 账号 | 免费版够用，<https://login.tailscale.com/start> 注册 |
 
-### 第 1 步：电脑装 Tailscale（先做这个）
+### 第 1 步：电脑这一端不用装 Tailscale
 
-1. 打开 <https://tailscale.com/download/windows> 下载安装
-2. 托盘里登录你的 Tailscale 账号，点 **Connect**
-3. 确认状态是 Connected
+插件**自带一个 tailnet 节点**（`native/win32-x64/dsh-tsnet.exe`，基于 `tailscale.com/tsnet`，用户态运行），和手机 App 里那个是同一套东西。效果：
 
-> 手机端虽然自带 Tailscale，但**电脑也必须在同一个 tailnet 里**，手机才找得到它。
+- 不需要管理员权限，不需要装 Tailscale，也不占系统 VPN
+- 不开机自启也没关系：DSH 一启动插件就把它拉起来，掉线会自动重连（3 秒起，最长 30 秒一次，永不放弃）
+- 第一次要在浏览器里登录一次，登录状态保存在本机，之后重启电脑也不用再登
+
+> 只装过系统版 Tailscale 的旧环境仍然兼容：插件会退回用系统 Tailscale 提供的地址。
 
 ### 第 2 步：电脑装这个插件
 
@@ -69,22 +71,24 @@ https://github.com/tihuzushi/dsh-phone-bridge
 
 必须是这种 `https://` 的完整地址（输入框不认 `github:user/repo` 简写）。装完**重启 DSH**。
 
-### 第 3 步：确认插件起来了
+### 第 3 步：确认插件起来了，并登录内置节点
 
 **设置 → DSH Phone Assistant**，应该看到：
 
 - 状态：**运行中**（绿点）
 - **配对码**：6 位数字，下一步要用
-- **Tailscale**：已连接 + 你的设备名
+- **内置 Tailscale**：一开始是「等待登录」，点卡片里的 **打开登录链接**，浏览器里登录你的 Tailscale 账号
 - 服务：监听 `0.0.0.0:8765`
+
+登录后卡片会变成「已连接」并显示设备名和地址，之后就不用再管了。
 
 任何一项不对：
 
 | 现象 | 处理 |
 |---|---|
 | 未运行 | 插件没启动，重启 DSH；再不行看 8765 是否被别的程序占用 |
-| Tailscale 红点「没有安装」 | 回第 1 步 |
-| Tailscale「已安装，但没有连接」 | 打开电脑上的 Tailscale 点 Connect |
+| 内置 Tailscale「等待登录」 | 点卡片里的「打开登录链接」，登录一次即可 |
+| 内置 Tailscale「没找到内置节点」 | 插件包不完整，重装插件 |
 
 ### 第 4 步：手机装 App
 

@@ -56,13 +56,15 @@ encrypted relay is the fallback, and the relay only forwards ciphertext.
 | An Android phone | Android 8.0 (API 26) or later |
 | A Tailscale account | The free plan is enough; sign up at <https://login.tailscale.com/start> |
 
-### Step 1: Install Tailscale on the computer (do this first)
+### Step 1: Nothing to install on the computer
 
-1. Open <https://tailscale.com/download/windows> and download the installer
-2. Sign in to your Tailscale account from the system tray, then click **Connect**
-3. Confirm the status is Connected
+The plugin **carries its own tailnet node** (`native/win32-x64/dsh-tsnet.exe`, built on `tailscale.com/tsnet`, running in user space) — the same thing the phone app has. That means:
 
-> The phone ships its own Tailscale, but **the computer must also be in the same tailnet** for the phone to find it.
+- No administrator rights, no Tailscale install, and no system VPN
+- No start-up entry needed: the plugin starts the node when DSH starts and reconnects on its own (from 3 seconds, capped at 30, never giving up)
+- Sign in once in a browser; the login is kept on disk, so a reboot does not ask again
+
+> An existing system Tailscale install still works: the plugin falls back to the address it provides.
 
 ### Step 2: Install this plugin on the computer
 
@@ -74,22 +76,24 @@ https://github.com/tihuzushi/dsh-phone-bridge
 
 It must be the full `https://` address (the input box does not accept the `github:user/repo` shorthand). **Restart DSH** after installing.
 
-### Step 3: Confirm the plugin is up
+### Step 3: Confirm the plugin is up, and sign in the built-in node
 
 **设置 → DSH Phone Assistant** (Settings → DSH Phone Assistant) should show:
 
 - Status: **运行中** (Running, green dot)
 - **配对码** (Pairing code): 6 digits, needed in the next step
-- **Tailscale**: connected + your device name
+- **内置 Tailscale** (Built-in Tailscale): first 「等待登录」 (waiting for sign-in) — click **打开登录链接** (Open sign-in link) and sign in to your Tailscale account
 - Service: listening on `0.0.0.0:8765`
+
+After signing in the card turns to 「已连接」 (connected) and shows the device name and address; nothing else to do.
 
 If any of these is wrong:
 
 | Symptom | What to do |
 |---|---|
 | Not running | The plugin did not start; restart DSH. If that does not help, check whether port 8765 is taken by another program |
-| Tailscale red dot 「没有安装」 (Not installed) | Go back to Step 1 |
-| Tailscale 「已安装，但没有连接」 (Installed, but not connected) | Open Tailscale on the computer and click Connect |
+| Built-in Tailscale 「等待登录」 (waiting for sign-in) | Click the 「打开登录链接」 link in the card and sign in once |
+| Built-in Tailscale 「没找到内置节点」 (node missing) | The package is incomplete; reinstall the plugin |
 
 ### Step 4: Install the app on the phone
 
