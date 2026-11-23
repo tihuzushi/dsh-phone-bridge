@@ -197,14 +197,19 @@ function runSettingsSection() {
     portBox.appendChild(controls)
     section.appendChild(portBox)
 
-    // Only Tailscale is offered: the phone app ships its own tailnet node, so a
-    // LAN address would work on one Wi-Fi and nowhere else.
+    // The desktop side carries its own tailnet node now, the same way the phone
+    // does: no Tailscale install, no Windows service, no administrator rights.
+    // The card reports that node; the system install only appears when the
+    // bundled node is missing entirely.
     const ts = data.tailscale || { state: 'checking' }
-    const tsCard = card('Tailscale')
-    const dotColor = ts.state === 'running' ? '#2ecc71' : (ts.state === 'not-installed' ? '#e74c3c' : '#e6b422')
+    const internal = ts.mode !== 'system'
+    const tsCard = card(internal ? '内置 Tailscale' : 'Tailscale')
+    const dotColor = ts.state === 'running' ? '#2ecc71' : (ts.state === 'unavailable' || ts.state === 'not-installed' ? '#e74c3c' : '#e6b422')
     const stateText = ts.state === 'running' ? '已连接'
+      : ts.state === 'needs-login' ? '等待登录（点下面的链接登录一次）'
+      : ts.state === 'starting' ? '正在启动'
+      : ts.state === 'unavailable' ? '这台电脑上没有找到内置节点'
       : ts.state === 'not-installed' ? '这台电脑没有安装'
-      : ts.state === 'needs-login' ? '已安装，但没有登录'
       : ts.state === 'stopped' ? '已安装，但没有连接'
       : '正在检测'
     const statusRow = el('div', 'display:flex;align-items:center;gap:8px;padding:12px 0 10px;')
@@ -217,8 +222,21 @@ function runSettingsSection() {
       // The phone carries its own tailnet node and discovers this machine through
       // the account, so the address is not something anyone has to type.
       if (ts.hostname) tsCard.appendChild(row('设备', ts.hostname))
+      if (ts.ip) tsCard.appendChild(row('地址', ts.ip))
       tsCard.appendChild(el('div', 'padding:10px 0 12px;font-size:12px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
         '手机端登录同一个 Tailscale 账号，在设备列表里选这台电脑，再填配对码。'))
+    } else if (ts.state === 'needs-login') {
+      tsCard.appendChild(el('div', 'padding:0 0 10px;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+        '内置节点已经起来了，只差在浏览器里登录一次。登录后它会自己连上，以后不用再管。'))
+      if (ts.authUrl) tsCard.appendChild(linkButton('打开登录链接', ts.authUrl))
+      tsCard.appendChild(el('div', 'padding:8px 0 12px;font-size:12px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+        '登录状态保存在本机，重启电脑也不用重新登录。'))
+    } else if (ts.state === 'starting') {
+      tsCard.appendChild(el('div', 'padding:0 0 12px;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+        '节点正在启动，几秒后这里会自动刷新。'))
+    } else if (ts.state === 'unavailable') {
+      tsCard.appendChild(el('div', 'padding:0 0 12px;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
+        '插件包里缺少 native\\win32-x64\\dsh-tsnet.exe，重新安装一次插件即可。'))
     } else if (ts.state === 'not-installed') {
       tsCard.appendChild(el('div', 'padding:0 0 10px;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
         '手机端已经带了自己的 Tailscale 节点，但电脑这一端需要装一个并登录同一账号，手机才连得回来。'))
@@ -227,7 +245,7 @@ function runSettingsSection() {
         '装好并登录后回到这里，状态会自动变成“已连接”。'))
     } else {
       tsCard.appendChild(el('div', 'padding:0 0 10px;font-size:13px;line-height:1.7;color:var(--dsw-alias-label-secondary, #9b9ba6);',
-        '在电脑上打开 Tailscale，登录并点“Connect”；连上以后手机才能找到这台电脑。'))
+        '正在连接，稍后会自动重试；也可以打开 Tailscale 管理后台看看这台设备。'))
       tsCard.appendChild(linkButton('打开 Tailscale 管理后台', 'https://login.tailscale.com/admin/machines'))
     }
     section.appendChild(tsCard)

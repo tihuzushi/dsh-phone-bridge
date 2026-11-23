@@ -1,6 +1,6 @@
 {
     "name":  "dsh-phone-bridge",
-    "version":  "0.4.15",
+    "version":  "0.4.16",
     "description":  "HARNESS Phone: the phone bridge and the mobile shell UI in a single DeepSeek Harness plugin. No extra process, no startup script.",
     "type":  "module",
     "main":  "lib/index.js",
@@ -13,6 +13,7 @@
                   "lib/index.js",
                   "lib/client.js",
                   "lib/build.json",
+                  "native/win32-x64/dsh-tsnet.exe",
                   "cordis.patch.yml",
                   "README.md",
                   "LICENSE"
